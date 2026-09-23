@@ -11,7 +11,8 @@
 - `editorial/build.py`：六个页面的生成源稿，文案、结构和作品顺序都在这里。
 - `editorial/cover.py`：生成首屏的纸面图和颗粒图（需要 numpy 和 Pillow）。弧线的参数和 `build.py` 里的 `cover_arc()` 一致，改一边要同时改另一边。
 - `editorial/fonts.py`：从源字体里挑出网站用到的字，重做 `dist/assets/fonts/` 里的字体子集。
-- `editorial/readme-images.mjs`：重截仓库首页 README 的配图，存进 `.github/images/`。
+- `editorial/readme-images.mjs`：重截仓库首页 README 里首屏和两个原型的配图，存进 `.github/images/`。
+- `editorial/readme-videos.sh`：给 README 压三段影片，第一帧换成网站用的封面，每段压到 10MB 以内。README 里的视频是 GitHub 附件，存在 issue #1 的评论里。
 - `editorial/gap-viewer.html`：GAP 详情页的双标签嵌入模板。
 - `editorial/IMPLEMENTATION.md`：早期的编辑记录，仅作参考；里面的目录指向原工作区，不影响运行。
 - `server.mjs`：本地预览。
@@ -31,7 +32,8 @@ node server.mjs
 - 文案、页面结构、作品顺序：改 `editorial/build.py`，再运行 `python3 editorial/build.py`，重新生成六个页面。直接改生成出来的 HTML，下次生成时会被覆盖；公共 CSS、JS 和各原型的文件可以直接改，不会被覆盖。
 - 出现了新字：运行 `python3 editorial/fonts.py` 重做字体子集（需要 fontTools 和源字体，文件开头写了去哪里取）。不重做也不会坏，新字会回落到系统宋体。
 - 换了影片：按新片子画面边缘的颜色改 `build.py` 里的 `STAGE`。影片所在的底板取自画面自己的底色，片子的边才看不出来。
-- 换了影片、改了首屏或原型：运行 `node editorial/readme-images.mjs`，重截 README 的配图。
+- 改了首屏或原型：运行 `node editorial/readme-images.mjs`，重截 README 的配图。
+- 换了影片或封面：运行 `bash editorial/readme-videos.sh` 压出新版，拖进 issue #1 的评论框发出评论，再把 GitHub 给的新链接换进 README。旧的那条评论等 README 推上去以后再删，删早了 README 里的视频会先放不出来。
 
 ## 交付范围
 
