@@ -72,14 +72,16 @@ const imageDialog=document.querySelector('.image-dialog');
 if(imageDialog){let opener;document.querySelectorAll('[data-expand-image]').forEach(button=>button.addEventListener('click',()=>{opener=button;const img=button.querySelector('img');imageDialog.querySelector('img').src=img.src;imageDialog.querySelector('img').alt=img.alt;imageDialog.querySelector('p').textContent=img.alt;pauseOtherMedia();pauseThinking();imageDialog.showModal();}));imageDialog.querySelector('[data-close-image]').addEventListener('click',()=>imageDialog.close());imageDialog.addEventListener('close',()=>opener?.focus({preventScroll:true}));}
 if(thinking){
  const frame=thinking.querySelector('[data-thinking-frame]'),pause=thinking.querySelector('[data-pause-thinking]');let loaded=false,inView=false,userPaused=reducedMotion.matches;
- const send=type=>frame.contentWindow?.postMessage({source:'portfolio',type},location.origin);
+ // 直接双击打开（file://）时，每个文件各算一个来源，消息只能不指定来源地发
+ const origin=location.protocol==='file:'?'*':location.origin;
+ const send=type=>frame.contentWindow?.postMessage({source:'portfolio',type},origin);
  const reconcile=()=>{pause.textContent=userPaused?'播放演示':'暂停';if(!loaded)return;send(userPaused||!inView||document.hidden?'pause':'resume');};
  pauseThinking=()=>{if(loaded&&inView){userPaused=true;reconcile();}};
  frame.addEventListener('load',()=>{loaded=true;reconcile();});
  if(frame.contentDocument?.querySelector('#stage'))loaded=true;
  pause.addEventListener('click',()=>{userPaused=!userPaused;if(!userPaused)pauseOtherMedia();reconcile();});
  thinking.querySelector('[data-restart-thinking]').addEventListener('click',()=>{userPaused=false;pauseOtherMedia();send('restart');reconcile();});
- addEventListener('message',event=>{if(event.origin===location.origin&&event.source===frame.contentWindow&&event.data?.source==='thinking-showcase'&&event.data.type==='restart-request'){userPaused=false;send('restart');reconcile();}});
+ addEventListener('message',event=>{if((origin==='*'||event.origin===location.origin)&&event.source===frame.contentWindow&&event.data?.source==='thinking-showcase'&&event.data.type==='restart-request'){userPaused=false;send('restart');reconcile();}});
  new IntersectionObserver(entries=>{inView=entries[0].intersectionRatio>=.4;if(inView&&!userPaused)pauseOtherMedia();reconcile();},{threshold:.4}).observe(frame);
  document.addEventListener('visibilitychange',reconcile);
  reducedMotion.addEventListener('change',()=>{if(reducedMotion.matches){userPaused=true;reconcile();}});

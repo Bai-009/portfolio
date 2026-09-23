@@ -1729,14 +1729,16 @@
     window.setTimeout(() => { input.placeholder = original; }, 1800);
   });
 
+  // Opened from disk (file://), every file is its own opaque origin, so messages cannot name one.
+  const portfolioOrigin = location.protocol === "file:" ? "*" : location.origin;
   window.addEventListener("message", (event) => {
-    if (event.origin !== location.origin || event.source !== parent || event.data?.source !== "portfolio") return;
+    if ((portfolioOrigin !== "*" && event.origin !== location.origin) || event.source !== parent || event.data?.source !== "portfolio") return;
     if (event.data.type === "pause") showcasePaused = true;
     if (event.data.type === "resume") showcasePaused = false;
     if (event.data.type === "restart") { showcasePaused = false; runDemo(); }
   });
   rerunButton.addEventListener("click", () => {
-    if (parent !== window) parent.postMessage({source:"thinking-showcase", type:"restart-request"}, location.origin);
+    if (parent !== window) parent.postMessage({source:"thinking-showcase", type:"restart-request"}, portfolioOrigin);
     else {showcasePaused=false;runDemo();}
   });
   runDemo();
