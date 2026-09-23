@@ -1725,7 +1725,7 @@
     if (!input.value.trim()) return;
     input.value = "";
     const original = input.placeholder;
-    input.placeholder = "此原型使用固定模拟数据，请点击右上角重新演示";
+    input.placeholder = "此原型使用固定模拟数据";
     window.setTimeout(() => { input.placeholder = original; }, 1800);
   });
 

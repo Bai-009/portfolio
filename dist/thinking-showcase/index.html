@@ -38,7 +38,7 @@
 
     button, input { color: inherit; font: inherit; }
     button { padding: 0; border: 0; background: none; cursor: pointer; }
-    button:focus-visible, input:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    button:focus-visible, input:focus-visible, a:focus-visible { outline: 1.5px solid var(--ink); outline-offset: 2px; }
 
     .top {
       position: sticky;
@@ -275,6 +275,8 @@
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; }
     }
+    /* 作品集展示副本：标题和重新演示都在外框上，这一行不再重复 */
+    .top-rail { display: none; }
   </style>
 </head>
 <body>
@@ -293,7 +295,7 @@
 
   <div class="dock">
     <form class="composer" id="form">
-      <input id="input" type="text" placeholder="固定问题演示，可点击右上角重新播放" autocomplete="off" aria-label="继续提问" />
+      <input id="input" type="text" placeholder="固定问题演示" autocomplete="off" aria-label="继续提问" />
       <button class="send" type="submit" aria-label="发送">↑</button>
     </form>
   </div>
