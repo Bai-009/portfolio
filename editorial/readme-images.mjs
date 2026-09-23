@@ -1,9 +1,9 @@
-// 重截仓库首页 README 的配图，写进 .github/images/。
+// 重截仓库首页 README 的配图（首屏和两个原型的画面），写进 .github/images/。三段影片在 README 里是视频，见 readme-videos.sh。
 // 直接打开 dist/index.html，不需要本地服务；需要 Node 22 以上和 Google Chrome。
 //
 //     node editorial/readme-images.mjs
 //
-// 换了影片、改了首屏或原型之后运行一次。Chrome 不在默认位置时，用环境变量 CHROME 指定。
+// 改了首屏或原型之后运行一次。Chrome 不在默认位置时，用环境变量 CHROME 指定。
 import { spawn } from 'node:child_process'
 import { mkdirSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
@@ -15,9 +15,9 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const OUT = join(ROOT, '.github', 'images')
 const PAGE = pathToFileURL(join(ROOT, 'dist', 'index.html')).href
 const CHROME = process.env.CHROME || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
-// 作品画面：[锚点, 等多久再截（毫秒）, 先等原型里出现的字]。Thinking 等答案第一节的末句写完，大约要一分钟；
+// 原型画面：[锚点, 等多久再截（毫秒）, 先等原型里出现的字]。Thinking 等答案第一节的末句写完，大约要一分钟；
 // 句末的引用标记随后 0.1 秒出来，再过半秒多，下一段就从输入框上沿冒出来了，所以只等 0.3 秒。
-const WORKS = [['canvasflow', 1500], ['astra', 1500], ['gap-analysis', 3500], ['co-thinker', 1500], ['thinking', 300, '两者并不矛盾。']]
+const WORKS = [['gap-analysis', 3500], ['thinking', 300, '两者并不矛盾。']]
 
 const port = 9400 + Math.floor(Math.random() * 400)
 const profile = join(tmpdir(), `portfolio-readme-${port}`)
@@ -88,8 +88,8 @@ await open('.site-header{display:none!important}')
 await sleep(4500)
 await shoot('cover', { x: 216, y: 233, width: 1008, height: 504 }, 1800)
 
-// 作品画面：停掉入场动画，收起播放键和原型下方的操作条；四边各裁掉一个圆角半径，图是方角的
-await open('.site-header,.film-play,.media-footer,.thinking-controls{display:none!important} .stage{animation:none!important} .js .reveal{opacity:1!important;transform:none!important}')
+// 原型画面：停掉入场动画，收起原型下方的操作条；四边各裁掉一个圆角半径，图是方角的
+await open('.site-header,.media-footer,.thinking-controls{display:none!important} .stage{animation:none!important} .js .reveal{opacity:1!important;transform:none!important}')
 for (const [slug, wait, text] of WORKS) {
   await run(`document.querySelector('#${slug} .stage').scrollIntoView({ block: 'center', behavior: 'instant' }); true`)
   for (let i = 0; text && i < 600 && !(await frameText(slug)).includes(text); i++) await sleep(200)

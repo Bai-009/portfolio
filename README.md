@@ -2,13 +2,15 @@
 
 下载仓库（Code → Download ZIP），解压后用浏览器打开 dist 文件夹里的 index.html，就能看完整的网站：短片能播放，原型能操作，不需要联网。
 
+下面三段短片都有配乐。GitHub 的播放器默认静音，点喇叭图标就有声音。
+
 ## CanvasFlow
 
 <sub>独立产品设计与实现</sub>
 
 用自然语言构建数据工作流，在画布上核对、理解和修改。
 
-![CanvasFlow：OCR 节点展开，显示处理内容及与上游节点的连接](.github/images/canvasflow.jpg)
+https://github.com/user-attachments/assets/3dcdd7f5-3666-4956-96c8-9e2f55eadc68
 
 计划先与用户对齐，节点随后逐个构建。代码在 [Bai-009/canvas-first-workflow](https://github.com/Bai-009/canvas-first-workflow)。
 
@@ -18,7 +20,7 @@
 
 企业 Agent 运行时 · 概念宣传片
 
-![Astra 概念宣传片：终端里，EXPLAIN 列出一次模型调用的上下文如何组装](.github/images/astra.jpg)
+https://github.com/user-attachments/assets/faa7e965-5e68-49d2-90fe-81f02f9710f1
 
 借鉴数据库的查询规划与 EXPLAIN，以一次支付系统迁移串起上下文的组装与追溯，呈现 Agent 围绕任务持续工作、延续判断依据的产品愿景。
 
@@ -38,7 +40,7 @@
 
 在对话里把想法说清，定下来的沉进地基，需要时一键凝成 Prompt，交给执行。
 
-![Co-Thinker：左边是对话，右边是地基](.github/images/co-thinker.jpg)
+https://github.com/user-attachments/assets/1497968b-6133-4f19-9958-36c09f720e4c
 
 地基在对话旁边一轮轮长出来。读完点一下，凝成一段能直接交出去的 Prompt。代码在 [Bai-009/Co-Thinker](https://github.com/Bai-009/Co-Thinker)。
 
