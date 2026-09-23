@@ -1,50 +1,71 @@
-# 白东昊 · 作品集完整工程
+![白东昊 作品集](.github/images/cover.jpg)
 
-这是当前作品集的独立副本，包含网站、素材、页面生成源稿和本地预览工具。文件夹可以整体移动，不依赖原工作区。
+下载仓库（Code → Download ZIP），解压后用浏览器打开 dist 文件夹里的 index.html，就能看完整的网站：短片能播放，原型能操作，不需要联网。
 
-## 文件位置
+## CanvasFlow
 
-- `dist/`：完整网站，可单独交给静态网站托管平台。
-- `dist/index.html`：首页；其余五个 HTML 文件为项目详情。
-- `dist/portfolio.css`：网站公共样式。
-- `dist/portfolio.js`：网站交互与嵌入缩放。
-- `dist/assets/`：视频、图片、字体和简历。`fonts/` 里是网页用的衬线字体子集（思源宋体、Newsreader）和它们的许可证。Co-Thinker 的完整演示、封面与三张截图是 `co-thinker-film.mp4` 和 `co-thinker-*.webp`。首页和详情页都放完整影片；`*-preview.mp4` 两段短预览已不再被页面引用，留作备查。
-- `dist/prototype/`、`gap/`、`thinking-prototype/`、`thinking-showcase/`：交互原型与展示副本，均位于 dist 内。`co-thinker-preview/`、`co-thinker-showcase/` 是旧版界面的样张，页面已不再链接，保留备查。
-- `editorial/build.py`：六个网站页面的生成源稿，负责文案、结构和项目顺序。
-- `editorial/cover.py`：生成首屏的纸面图和颗粒图（需要 numpy 和 Pillow）。弧线的参数和 `build.py` 里的 `cover_arc()` 一致，改一边要同时改另一边。
-- `editorial/fonts.py`：从源字体里挑出网站用到的字，重新生成 `dist/assets/fonts/` 里的字体子集。
-- `editorial/gap-viewer.html`：GAP 详情的双标签嵌入模板。
-- `editorial/IMPLEMENTATION.md`：编辑历史，仅作参考；历史目录位置指向原工作区，不影响本工程运行。
-- `server.mjs`：本地预览工具。
+<sub>独立产品设计与实现</sub>
 
-## 本地打开
+用自然语言构建数据工作流，在画布上核对、理解和修改。
 
-安装 Node.js 后，在本文件所在文件夹运行：
+![CanvasFlow：OCR 节点展开，显示处理内容及与上游节点的连接](.github/images/canvasflow.jpg)
 
-```sh
-node server.mjs
-```
+计划先与用户对齐，节点随后逐个构建。代码在 [Bai-009/canvas-first-workflow](https://github.com/Bai-009/canvas-first-workflow)。
 
-浏览器访问 http://127.0.0.1:8809 。关闭预览时在终端按 Ctrl+C。
-请使用本地服务打开；直接双击 HTML 可能限制原型通信和媒体行为。
+## Astra
 
-## 修改与生成
+<sub>矩阵起源 · 产品研究与概念影片创作</sub>
 
-修改文案、页面结构、项目顺序：编辑 `editorial/build.py`，然后安装 Python 3 并运行：
+企业 Agent 运行时 · 概念宣传片
 
-```sh
-python3 editorial/build.py
-```
+![Astra 概念宣传片：终端里，EXPLAIN 列出一次模型调用的上下文如何组装](.github/images/astra.jpg)
 
-这会重新生成 dist 下的六个主页面。仅修改生成后的 HTML 会在下一次生成时被覆盖。
+借鉴数据库的查询规划与 EXPLAIN，以一次支付系统迁移串起上下文的组装与追溯，呈现 Agent 围绕任务持续工作、延续判断依据的产品愿景。
 
-改了文案、出现了新字，再运行 `python3 editorial/fonts.py` 重做字体子集（需要 fontTools 和源字体，文件开头写了去哪里取）。不重做也不会坏，新字会回落到系统宋体。
+## GAP Analysis
 
-换了影片，要按新片子画面边缘的颜色改 `build.py` 里的 `STAGE`：影片所在的整行底色取自画面自己的底色，片子的边才看不出来。
-公共 CSS、JS 与各原型源文件可直接修改，不会被该脚本覆盖。
+<sub>药明生物 · 企业 AI 解决方案</sub>
 
-## 交付范围
+生物药工艺转移中的参数提取、专家核验与风险研判。同一历史项目的单客户参数提取，耗时从 50 小时以上降到约 20 分钟；业务专家评估的参数识别率在 90% 以上。
 
-包含当前网站使用的原型源码与成品视频；不含各独立产品的后端、模型服务或视频剪辑工程。原型中的预设交互及概念影片标注保留。GitHub、文章、邮件等外部入口需要网络。
+![GAP 核验原型：查看接种密度的提取依据](.github/images/gap-analysis.jpg)
 
-版本：2026-09-23。版式改为冷白纸面、衬线标题。首屏是一张纸，光从下面漫上来，标题「作品集」沿光的上沿排，名字只在顶栏。中文用思源宋体，西文用 Newsreader；所有作品的画面同宽，放在取自画面底色的底板上，片名、画面和页边落在同一栏里。Co-Thinker 的短片与截图按新版界面重新录制，仍是真实模型连线，从对话、地基一直演示到一键生成 Prompt 并复制，片尾新建对话、回到首屏，共 1 分 19 秒。短片配了原创合成的音乐，没有使用外部采样或录音。项目顺序：CanvasFlow、Astra、GAP Analysis、Co-Thinker、Thinking、AfterSpark。
+主导产品定义、系统架构与原型验证。
+
+## Co-Thinker
+
+<sub>独立产品设计与实现</sub>
+
+在对话里把想法说清，定下来的沉进地基，需要时一键凝成 Prompt，交给执行。
+
+![Co-Thinker：左边是对话，右边是地基](.github/images/co-thinker.jpg)
+
+地基在对话旁边一轮轮长出来。读完点一下，凝成一段能直接交出去的 Prompt。代码在 [Bai-009/Co-Thinker](https://github.com/Bai-009/Co-Thinker)。
+
+## Thinking
+
+<sub>信息架构与交互设计</sub>
+
+按思路组织智能体的运行信息，完成后沿答案追溯依据。
+
+![Thinking 动态原型：运行过程收成一行，下面是带引用的答案](.github/images/thinking.jpg)
+
+切换行动时保留判断；切换判断时，所属执行信息一起退出。代码在 [Bai-009/agent-thinking-ui](https://github.com/Bai-009/agent-thinking-ui)。
+
+## AfterSpark
+
+<sub>独立产品 · AI 社交引荐</sub>
+
+两个人所处的领域不同，却可能一直在思考相似的问题。AfterSpark 从长期对话中寻找这种联系，经多 Agent 审议和双方同意后，尝试把讨论带向共同交流。
+
+## 经历与文章
+
+**药明生物**　主导 GAP Analysis AI 解决方案的产品定义与系统架构，完成原型及 MVP 验证。
+
+**矩阵起源**　端到端负责工作流模块的产品定义、交互设计与验收；参与平台体验迭代，设计智能体运行过程的信息呈现。
+
+**产品研究**　YouWare、Kimi 与 AI 的现实应用。文章在 [Bai-009/ai-product-research](https://github.com/Bai-009/ai-product-research)。
+
+---
+
+[简历](dist/assets/resume.pdf)　·　[邮件联系](mailto:15234067089@163.com)
