@@ -41,13 +41,12 @@ document.querySelectorAll('[data-preview]').forEach(preview=>{
    const tick=()=>{frameRequest=null;animationRequest=null;draw();if(preview.paused||preview.ended||document.hidden)return;if(preview.requestVideoFrameCallback)frameRequest=preview.requestVideoFrameCallback(tick);else animationRequest=requestAnimationFrame(tick);};
    const start=()=>{stop();tick();};
    preview.addEventListener('playing',start);
-   preview.addEventListener('loadeddata',draw);
-   preview.addEventListener('seeked',()=>{draw();if(!preview.paused)start();});
+   // 没放起来之前不画：有的浏览器暂停在首帧时画出来是一整块黑，封面图一直留到真的开始播放
+   preview.addEventListener('seeked',()=>{if(!preview.paused)start();});
    preview.addEventListener('pause',()=>{stop();draw();});
    preview.addEventListener('ended',()=>{stop();draw();});
    preview.addEventListener('error',()=>{stop();previewSurface.dataset.painted='false';});
    document.addEventListener('visibilitychange',()=>{if(document.hidden)stop();else if(!preview.paused)start();});
-   draw();
   }
  }
  const button=shell.querySelector('[data-play]');let visible=false,userPaused=false,ended=false,started=false;
@@ -59,6 +58,11 @@ document.querySelectorAll('[data-preview]').forEach(preview=>{
  new IntersectionObserver(entries=>{visible=entries[0].intersectionRatio>=.45;reconcile();},{threshold:.45}).observe(shell);
  document.addEventListener('visibilitychange',reconcile);
  reducedMotion.addEventListener('change',()=>{if(reducedMotion.matches){userPaused=true;preview.pause();}});
+});
+document.querySelectorAll('[data-film-play]').forEach(button=>{
+ const shell=button.closest('.film-shell'),film=shell.querySelector('video');
+ film.addEventListener('play',()=>{film.controls=true;shell.classList.remove('is-idle');});
+ button.addEventListener('click',()=>{film.controls=true;shell.classList.remove('is-idle');film.play().catch(()=>{});film.focus({preventScroll:true});});
 });
 const fullFilm=document.querySelector('.full-film');
 document.querySelectorAll('[data-seek]').forEach(button=>button.addEventListener('click',()=>{if(!fullFilm)return;fullFilm.currentTime=Number(button.dataset.seek);fullFilm.play().catch(()=>{});fullFilm.scrollIntoView({behavior:reducedMotion.matches?'instant':'smooth',block:'center'});}));
@@ -85,4 +89,10 @@ const gapShowcase=document.querySelector('[data-gap-showcase]');
 if(gapShowcase){const tabs=[...gapShowcase.querySelectorAll('[data-gap-tab]')],open=gapShowcase.querySelector('[data-gap-open]');
  const select=tab=>{const scope=tab.dataset.gapTab==='scope';tabs.forEach(item=>{const selected=item===tab;item.setAttribute('aria-selected',String(selected));item.tabIndex=selected?0:-1;});gapShowcase.querySelectorAll('[data-gap-panel]').forEach(panel=>{const selected=panel.dataset.gapPanel===tab.dataset.gapTab;panel.hidden=!selected;const frame=panel.querySelector('iframe');if(selected&&frame.dataset.src&&!frame.getAttribute('src'))frame.src=frame.dataset.src;});open.href=scope?'gap/module-responsibility-restructure.html':'gap/gap-prototype-review.html';open.textContent=scope?'独立打开需求梳理':'独立打开原型';gapShowcase.querySelector('.gap-viewer-foot>span').textContent=scope?'需求梳理 · 完整配图与交互':'桌面交互原型 · 示例内容';};
  tabs.forEach((tab,index)=>{tab.addEventListener('click',()=>select(tab));tab.addEventListener('keydown',event=>{let next;if(event.key==='ArrowRight'||event.key==='ArrowLeft')next=tabs[(index+1)%tabs.length];if(event.key==='Home')next=tabs[0];if(event.key==='End')next=tabs.at(-1);if(next){event.preventDefault();select(next);next.focus();}});});
+}
+// 往下读时，标题、说明和图浮上来；首屏靠 CSS 动画，不在这里
+const revealing=document.querySelectorAll('.work-head,.work-figures,.work-foot,.about,.case-outcome,.case-section .section-copy,.case-section figure,.gap-showcase,.case-note,.case-next,.site-footer');
+if('IntersectionObserver' in window&&!reducedMotion.matches){
+ const seen=new IntersectionObserver(entries=>entries.forEach(entry=>{if(entry.isIntersecting){entry.target.classList.add('is-in');seen.unobserve(entry.target);}}),{rootMargin:'0px 0px -8% 0px'});
+ revealing.forEach(el=>{el.classList.add('reveal');seen.observe(el);});
 }
