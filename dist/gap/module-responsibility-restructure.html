@@ -1,0 +1,1427 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>模块化功能职责重构</title>
+<style>
+:root {
+  --font-display: Georgia, "Times New Roman", "Songti SC", "Noto Serif SC", serif;
+  --font-ui: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Noto Sans SC", sans-serif;
+  --graphite: #1f2e46;
+  --soft-graphite: rgba(31, 46, 70, .78);
+  --glass: rgba(255, 255, 255, .36);
+  --glass-border: rgba(255, 255, 255, .58);
+}
+
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  min-height: 100vh;
+  margin: 0;
+  color: rgba(255, 255, 255, .86);
+  font: 13.5px/1.68 var(--font-ui);
+  overflow-x: hidden;
+}
+
+.ambient-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -3;
+  background-image: url("assets/hero-nature-bg.png");
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+}
+
+.ambient-bg::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgba(120,160,205,.07), transparent 18%, transparent 82%, rgba(120,160,205,.07)),
+    linear-gradient(180deg, rgba(255,255,255,.09), rgba(255,255,255,.015) 42%, rgba(255,255,255,.11));
+  pointer-events: none;
+}
+
+button { font: inherit; color: inherit; }
+
+.brand-page {
+  position: relative;
+  min-height: 100vh;
+  width: min(1380px, calc(100vw - 48px));
+  margin: 0 auto;
+  padding: 20px 0 42px;
+}
+
+.top-nav {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  padding: 8px 0 12px;
+  gap: 24px;
+}
+
+.brand-mark {
+  font: 600 20px/1 var(--font-display);
+  letter-spacing: -.2px;
+  color: rgba(255,255,255,.95);
+  justify-self: start;
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  justify-self: center;
+}
+
+.nav-links button {
+  border: 0;
+  background: transparent;
+  color: rgba(255,255,255,.9);
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 13px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  transition: all .15s ease;
+}
+
+.nav-links button:hover {
+  color: #fff;
+  background: rgba(255,255,255,.12);
+}
+
+.nav-cta {
+  justify-self: end;
+  border: 1px solid rgba(255,255,255,.28);
+  background: rgba(255,255,255,.16);
+  color: rgba(255,255,255,.96);
+  cursor: pointer;
+  padding: 7px 16px;
+  font-size: 12.5px;
+  font-weight: 600;
+  border-radius: 999px;
+  transition: all .18s ease;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.18), 0 4px 16px rgba(20,35,60,.08);
+  backdrop-filter: blur(10px) saturate(1.12);
+}
+
+.nav-cta:hover {
+  background: rgba(255,255,255,.25);
+  transform: translateY(-1px);
+}
+
+.hero {
+  position: relative;
+  text-align: center;
+  padding: 72px 20px 32px;
+  min-height: 380px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hero-content {
+  position: relative;
+  z-index: 2;
+  max-width: 620px;
+}
+
+.eyebrow {
+  font-size: 11px;
+  letter-spacing: 3px;
+  opacity: .85;
+  margin-bottom: 10px;
+  color: rgba(255,255,255,.92);
+}
+
+.hero h1 {
+  font: 700 44px/1.02 var(--font-display);
+  margin: 0 0 20px;
+  letter-spacing: -.6px;
+  color: rgba(255,255,255,.98);
+  text-shadow:
+    0 2px 20px rgba(20, 40, 70, .38),
+    0 1px 3px rgba(20, 40, 70, .22);
+}
+
+
+
+.hero-actions {
+  display: flex;
+  gap: 14px;
+  justify-content: center;
+  margin-top: 8px;
+}
+
+.hero-action {
+  min-width: 160px;
+  border: 0;
+  background: rgba(255,255,255,.85);
+  color: #1f2e46;
+  cursor: pointer;
+  padding: 11px 22px;
+  font-size: 13.5px;
+  font-weight: 600;
+  letter-spacing: .3px;
+  border-radius: 999px;
+  transition: all .2s cubic-bezier(0.2, 0, 0, 1);
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,.08);
+}
+
+.hero-action:hover {
+  background: #fff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0,0,0,.12);
+}
+
+.hero-action.secondary {
+  background: rgba(255,255,255,.18);
+  color: rgba(255,255,255,.95);
+  box-shadow: 0 2px 8px rgba(0,0,0,.06);
+}
+
+.modules-section {
+  margin-top: 12px;
+  padding: 24px 12px 36px;
+  position: relative;
+  background: transparent;
+}
+
+.sequence-section {
+  margin: 0 auto 18px;
+  padding: 8px 12px 6px;
+}
+
+.sequence-shell {
+  max-width: 1080px;
+  margin: 0 auto;
+  border: 1px solid rgba(200,215,235,.45);
+  background: rgba(255,255,255,.48);
+  border-radius: 18px;
+  box-shadow: 0 5px 18px rgba(30,50,90,.08);
+  overflow: hidden;
+  color: var(--graphite);
+}
+
+.sequence-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 13px 18px 8px;
+  border-bottom: 1px solid rgba(31,46,70,.08);
+  background: rgba(255,255,255,.34);
+}
+
+.sequence-top h2 {
+  margin: 0;
+  font-size: 14.5px;
+  line-height: 1.25;
+  font-weight: 700;
+  letter-spacing: -.1px;
+  color: #172235;
+}
+
+.sequence-top p {
+  margin: 3px 0 0;
+  color: #3c506b;
+  font-size: 11.8px;
+  line-height: 1.45;
+}
+
+.sequence-hint {
+  font-size: 11.5px;
+  color: #526986;
+  white-space: nowrap;
+}
+
+.sequence-scroll {
+  overflow-x: auto;
+  padding: 12px 14px;
+}
+
+.sequence-track {
+  display: flex;
+  gap: 8px;
+  min-width: 980px;
+  align-items: center;
+}
+
+.sequence-step {
+  position: relative;
+  min-width: 104px;
+  flex: 1 0 104px;
+  border: 1px solid rgba(185,202,226,.45);
+  background: rgba(255,255,255,.58);
+  border-radius: 999px;
+  padding: 8px 10px;
+  cursor: pointer;
+  color: #243955;
+  display: grid;
+  grid-template-columns: 24px 1fr;
+  align-items: center;
+  gap: 7px;
+  text-align: left;
+  transition: transform .16s ease, background .16s ease, box-shadow .16s ease;
+}
+
+.sequence-step::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: -9px;
+  width: 10px;
+  height: 1px;
+  background: rgba(54,77,108,.3);
+}
+
+.sequence-step:last-child::after { display: none; }
+
+.sequence-step:hover {
+  background: rgba(255,255,255,.8);
+  transform: translateY(-1px);
+  box-shadow: 0 5px 14px rgba(30,50,90,.08);
+}
+
+.sequence-step.active {
+  background: rgba(255,255,255,.9);
+  border-color: rgba(58,84,122,.42);
+  box-shadow: 0 6px 16px rgba(30,50,90,.12);
+}
+
+.sequence-no {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 23px;
+  height: 23px;
+  border-radius: 50%;
+  background: rgba(50,84,130,.09);
+  color: #253a58;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.sequence-title {
+  font-size: 12.2px;
+  line-height: 1.22;
+  font-weight: 700;
+  color: #172235;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sequence-detail {
+  display: none;
+  margin: 0 14px 14px;
+  padding: 13px 15px;
+  border-radius: 14px;
+  background: rgba(255,255,255,.76);
+  border: 1px solid rgba(185,202,226,.44);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.6);
+}
+
+.sequence-detail.open { display: block; }
+
+.sequence-detail-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 10px;
+}
+
+.sequence-detail h3 {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.25;
+  color: #172235;
+}
+
+.sequence-detail-modules {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.sequence-detail-modules span {
+  font-size: 10.5px;
+  line-height: 1;
+  padding: 5px 7px;
+  border-radius: 999px;
+  background: #edf3fa;
+  color: #2d4667;
+}
+
+.sequence-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.sequence-detail-grid p {
+  margin: 0;
+  color: #33465f;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.sequence-detail-grid em {
+  display: block;
+  font-style: normal;
+  font-size: 10.5px;
+  line-height: 1.2;
+  text-transform: uppercase;
+  letter-spacing: .9px;
+  color: #657a96;
+  margin-bottom: 3px;
+}
+
+.sequence-note {
+  display: none;
+  padding: 0 18px 13px;
+  color: #435772;
+  font-size: 12.2px;
+}
+
+.section-head {
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.cloud-label {
+  font-size: 11px;
+  letter-spacing: 2.5px;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  color: #2f425c;
+  text-shadow: 0 1px 4px rgba(255,255,255,.6);
+}
+
+.section-desc {
+  max-width: 560px;
+  margin: 0 auto;
+  font-size: 13.5px;
+  color: #2f425c;
+  text-shadow: 0 1px 4px rgba(255,255,255,.5);
+}
+
+.module-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(260px, 1fr));
+  gap: 16px;
+  max-width: 1080px;
+  margin: 0 auto;
+}
+
+@media (max-width: 860px) {
+  .module-grid { grid-template-columns: repeat(2, minmax(240px, 1fr)); }
+}
+@media (max-width: 520px) {
+  .module-grid { grid-template-columns: 1fr; gap: 14px; }
+}
+
+.module-pill {
+  background: rgba(255,255,255,.68);
+  border: 1px solid rgba(200,215,235,.38);
+  border-radius: 16px;
+  padding: 15px 17px;
+  text-align: left;
+  cursor: pointer;
+  transition: transform .16s ease, box-shadow .16s ease, background .16s;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 2px 10px rgba(30,50,90,.08);
+}
+
+.module-pill:hover {
+  background: rgba(255,255,255,.82);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(30,50,90,.12);
+  border-color: rgba(180,200,225,.5);
+}
+
+.module-pill.active {
+  background: rgba(255,255,255,.88);
+  border-color: #4d6b94;
+  box-shadow: 0 3px 12px rgba(30,50,90,.15);
+}
+
+.module-pill small {
+  display: block;
+  font-size: 10.5px;
+  color: #3f5269;
+  letter-spacing: .8px;
+  margin-bottom: 2px;
+}
+
+.module-pill b {
+  display: block;
+  font-size: 14.5px;
+  line-height: 1.32;
+  font-weight: 650;
+  color: #16202e;
+  margin: 4px 0 6px;
+  overflow-wrap: break-word;
+}
+
+.module-pill span {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-size: 12.5px;
+  color: #34465c;
+  line-height: 1.35;
+}
+
+/* ===== Backdrop & Modals ===== */
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 28, 52, .22);
+  z-index: 60;
+  display: none;
+}
+
+.backdrop.open { display: block; }
+
+.modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 70;
+  display: none;
+  flex-direction: column;
+  background: rgba(255,255,255,.94);
+  border: 1px solid rgba(200, 215, 235, .6);
+  border-radius: 20px;
+  box-shadow: 0 20px 70px rgba(30, 50, 90, .22);
+  overflow: hidden;
+  color: var(--graphite);
+}
+
+.modal.open { display: flex; }
+
+.module-modal { width: min(720px, 94vw); max-height: 78vh; }
+
+.module-modal .modal-head { padding: 22px 26px 12px; border-bottom: 1px solid rgba(31,46,70,.08); }
+
+.module-modal .modal-kicker {
+  display: flex; gap: 8px; font-size: 11px; color: var(--soft-graphite); margin-bottom: 3px;
+}
+
+.module-modal .modal-kicker span {
+  background: rgba(31,46,70,.07); padding: 1px 8px; border-radius: 999px; font-size: 10.5px;
+}
+
+.module-modal h2 { margin: 0; font-size: 17.5px; line-height: 1.25; font-weight: 650; color: var(--graphite); }
+
+.module-modal .purpose { margin: 6px 0 0; font-size: 13.5px; line-height: 1.5; color: var(--soft-graphite); }
+
+.modal-close {
+  position: absolute; top: 14px; right: 16px; width: 28px; height: 28px;
+  border: 0; background: transparent; font-size: 24px; line-height: 1; color: #475a75;
+  cursor: pointer; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+}
+.modal-close:hover { background: rgba(31,46,70,.06); }
+
+.modal-tabs {
+  display: flex; gap: 4px; padding: 0 18px;
+  border-bottom: 1px solid rgba(31,46,70,.07);
+  background: #f3f7fc;
+}
+
+.modal-tab {
+  border: 0; background: transparent; padding: 10px 14px; font-size: 12.5px; font-weight: 600;
+  color: var(--graphite); opacity: .65; cursor: pointer;
+}
+.modal-tab.active { opacity: 1; background: #fff; border-radius: 8px 8px 0 0; }
+
+.modal-body {
+  padding: 18px 26px; overflow: auto; flex: 1;
+  font-size: 13.5px; line-height: 1.55;
+  background: #fff;
+}
+.modal-body h3 {
+  font-size: 11px; letter-spacing: 1.1px; text-transform: uppercase;
+  color: #4a5f7a; margin: 0 0 5px; font-weight: 600;
+}
+.modal-body p { margin: 0 0 10px; color: #2e4058; }
+
+.key-functions { display: flex; flex-direction: column; gap: 5px; }
+.key-functions span { background: #f3f7fc; padding: 5px 12px; border-radius: 7px; font-size: 13px; color: #2e4058; }
+
+.full-list { display: flex; flex-wrap: wrap; gap: 5px; }
+.full-list span { background: #f3f7fc; padding: 4px 10px; border-radius: 6px; font-size: 12.5px; }
+
+.io-row { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+
+.pill-wrap { display: flex; flex-wrap: wrap; gap: 5px; }
+.light-pill { background: #f0f4f9; border-radius: 999px; padding: 2px 9px; font-size: 11.5px; color: #3b506e; }
+
+.data-modal { width: min(1120px, 94vw); max-height: 74vh; }
+
+.data-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 15px 22px; border-bottom: 1px solid rgba(31,46,70,.08); flex-shrink: 0;
+  background: #f8fafd;
+}
+.data-head h2 { margin: 0; font-size: 15px; font-weight: 600; color: var(--graphite); }
+
+.data-tabs { display: flex; gap: 6px; align-items: center; }
+
+.table-area {
+  flex: 1;
+  overflow: auto;
+  overflow-x: auto;
+  padding: 0;
+  background: rgba(246, 250, 255, .92);
+}
+
+.data-modal table {
+  table-layout: fixed;
+  width: 100%;
+  min-width: 1180px;
+  border-collapse: collapse;
+  font-size: 13px;
+  color: #2e4058;
+}
+
+.data-modal th,
+.data-modal td {
+  text-align: left;
+  border-bottom: 1px solid rgba(180,195,215,.35);
+  vertical-align: top;
+}
+
+.data-modal th {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: rgba(246, 250, 255, .98);
+  color: #334a65;
+  font-weight: 600;
+  font-size: 12.5px;
+  line-height: 1.2;
+  white-space: nowrap;
+  padding: 8px 10px;
+  backdrop-filter: none;
+}
+
+.data-modal td {
+  background: rgba(255,255,255,.95);
+  padding: 10px 12px;
+  font-size: 13px;
+  line-height: 1.5;
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+/* Column widths (fixed layout) */
+.data-modal th:nth-child(1), .data-modal td:nth-child(1) { width: 14%; }
+.data-modal th:nth-child(2), .data-modal td:nth-child(2) { width: 18%; }
+.data-modal th:nth-child(3), .data-modal td:nth-child(3) { width: 19%; }
+
+.data-modal th:nth-child(4), .data-modal td:nth-child(4) {
+  width: 12%;
+  /* allow wrapping - reuse "复用方式" column has long text */
+}
+
+.data-modal th:nth-child(5), .data-modal td:nth-child(5) {
+  width: 7%;
+  white-space: nowrap;
+  text-align: center;
+}
+
+.data-modal th:nth-child(6), .data-modal td:nth-child(6) { width: 15%; }
+.data-modal th:nth-child(7), .data-modal td:nth-child(7) { width: 15%; }
+
+.modal-action {
+  border: 0; background: rgba(31,46,70,.06); padding: 5px 14px; font-size: 12.5px;
+  color: var(--graphite); cursor: pointer; border-radius: 6px;
+}
+.modal-action:hover { background: rgba(31,46,70,.12); }
+
+@media (max-width: 640px) {
+  .module-modal, .data-modal {
+    width: 100%; max-height: 100%; border-radius: 20px 20px 0 0;
+    top: auto; bottom: 0; transform: translate(-50%, 0);
+  }
+  .io-row { grid-template-columns: 1fr; }
+  .sequence-top { align-items: flex-start; flex-direction: column; }
+  .sequence-hint { white-space: normal; }
+  .sequence-detail-grid { grid-template-columns: 1fr; }
+  .sequence-detail-head { align-items: flex-start; flex-direction: column; }
+  .sequence-detail-modules { justify-content: flex-start; }
+  .modules-section { padding: 20px 16px 32px; }
+}
+</style>
+</head>
+<body>
+<div class="ambient-bg" aria-hidden="true"></div>
+<div class="brand-page">
+  <nav class="top-nav" aria-label="Primary">
+    <div class="brand-mark">Capability Map</div>
+    <div class="nav-links">
+      <button type="button" data-scroll-target="overview">Overview</button>
+      <button type="button" data-scroll-target="sequence">Sequence</button>
+      <button type="button" data-scroll-target="modules">Modules</button>
+      <button type="button" data-open-data="reuse">Reuse</button>
+    </div>
+    <button class="nav-cta" type="button" data-open-data="mapping">Mapping</button>
+  </nav>
+
+  <main id="overview" class="hero">
+    <div class="hero-content">
+      <p class="eyebrow">GAP Analysis Agent · Capability Map</p>
+      <h1>模块化功能职责重构</h1>
+      <div class="hero-actions">
+        <button class="hero-action" type="button" data-open-first>Explore Modules</button>
+        <button class="hero-action secondary" type="button" data-open-data="mapping">View Mapping</button>
+      </div>
+    </div>
+  </main>
+
+  <section id="sequence" class="sequence-section">
+    <div class="sequence-shell">
+      <div class="sequence-top">
+        <div>
+          <h2>端到端时序图</h2>
+          <p>按系统运行顺序展示数据、判断、人工确认、会话和交付快照如何流转。</p>
+        </div>
+        <div class="sequence-hint">点击节点展开</div>
+      </div>
+      <div class="sequence-scroll">
+        <div class="sequence-track" id="sequenceTrack"></div>
+      </div>
+      <div class="sequence-detail" id="sequenceDetail"></div>
+      <div class="sequence-note">重点边界：M09 写入 AI 初评和 messages；M10 允许 AI 工具改表，但只能进入 Draft；M12 只导出已 Accept 的正式 Risk table。</div>
+    </div>
+  </section>
+
+  <section id="modules" class="modules-section">
+    <div class="section-head">
+      <p class="cloud-label">Core Modules</p>
+      <p class="section-desc">12 个核心能力模块 · 点击卡片展开职责、输入输出、复用边界与原报价项映射</p>
+    </div>
+    <div class="module-grid" id="lightModulePills"></div>
+  </section>
+</div>
+
+<!-- Single backdrop for all overlays -->
+<div class="backdrop" id="backdrop"></div>
+
+<!-- Module centered glass modal -->
+<div class="modal module-modal" id="moduleModal" aria-live="polite">
+  <button class="modal-close" type="button" data-close aria-label="关闭">×</button>
+  <div class="modal-head">
+    <div class="modal-kicker">
+      <span id="modalType"></span>
+      <span id="modalId"></span>
+    </div>
+    <h2 id="modalTitle"></h2>
+    <p class="purpose" id="modalPurpose"></p>
+  </div>
+  <div class="modal-tabs">
+    <button class="modal-tab active" data-tab="duties" type="button">职责</button>
+    <button class="modal-tab" data-tab="functions" type="button">功能</button>
+    <button class="modal-tab" data-tab="io" type="button">输入输出</button>
+    <button class="modal-tab" data-tab="links" type="button">衔接</button>
+    <button class="modal-tab" data-tab="quote" type="button">报价项</button>
+    <button class="modal-tab" data-tab="reuse" type="button">复用边界</button>
+  </div>
+  <div class="modal-body" id="modalBody"></div>
+</div>
+
+<!-- Data (Mapping / Reuse) centered modal -->
+<section class="modal data-modal" id="dataModal" aria-live="polite">
+  <div class="data-head">
+    <h2 id="dataTitle">原报价项映射</h2>
+    <div class="data-tabs">
+      <button class="modal-action" type="button" data-open-data="mapping">Mapping</button>
+      <button class="modal-action" type="button" data-open-data="reuse">Reuse</button>
+      <button class="modal-action" type="button" data-close>关闭</button>
+    </div>
+  </div>
+  <div class="table-area">
+    <table id="lightDataTable"></table>
+  </div>
+</section>
+<script>
+const modules = [
+  {
+    id:"M01",
+    name:"基础平台与药明账号项目工作台",
+    type:"底层基础能力",
+    layer:"底座层",
+    purpose:"承载药明账号身份、项目容器、项目成员权限、文档清单、处理状态和历史输出索引，是所有后续动作的入口。",
+    responsibilities:"负责接入药明 AAD/Entra ID SSO（药明账号单点登录），并统一承载项目、文档、项目成员权限、处理状态和历史输出。",
+    functions:["药明 AAD/Entra ID SSO 登录和回调配置","项目成员授权、实验员协作权限和管理员角色区分","基于药明账号记录访问人、修改人、确认人和导出人","项目创建、归档、状态查看和历史输出索引","项目内文档上传、查看、追加和处理记录","Chrome / Edge 访问兼容"],
+    input:["药明账号身份","项目基本信息","项目成员与角色配置","上传文件","历史输出记录"],
+    output:["项目容器","药明账号上下文","项目成员权限","文档清单","处理状态","历史输出索引"],
+    deps:[],
+    next:["M02","M05","M08","M10","M11","M12"],
+    reuse:"药明账号身份、项目成员权限、项目ID、文档清单和状态索引被全链路复用。",
+    quote:"第1条 用户登录和权限管理；第2条 文档项目管理；第5条 浏览器支持",
+    cross:"项目增量更新中的补充文档进入项目属于本模块入口；后续实际重处理由M05/M06/M07负责。",
+    note:"登录、权限、项目和浏览器兼容共同构成系统入口能力，适合统一建设后被后续流程复用。"
+  },
+  {
+    id:"M02",
+    name:"文档接收与质量分流",
+    type:"数据入口能力",
+    layer:"解析层",
+    purpose:"作为文档进入系统后的第一道关卡，判断资料是否可处理、应走哪条处理路线，以及哪些内容需要增强识别或人工介入。",
+    responsibilities:"负责接收多格式文档，识别文件类型、页面可读性、清晰度、扫描/手写/复杂表格特征，并生成质量标签和处理路线。",
+    functions:["pdf/docx/pptx/xlsx文件接收和基础校验","文件类型、页数、大小和基础元数据识别","页面清晰度、可读性和异常页标记","扫描件、手写、复杂表格、跨页表格等处理标签","生成普通解析、OCR增强、人工复核或异常拦截的处理路线"],
+    input:["项目文档","文件元数据","解析配置","项目上下文"],
+    output:["文件清单","页面清单","质量标签","处理路线","异常标记"],
+    deps:["M01"],
+    next:["M03","M04","M05"],
+    reuse:"文件清单、页面清单、质量标签和处理路线被OCR增强、证据链、抽取和复核模块复用。",
+    quote:"第9条 文档格式支持；第10条 手写笔迹识别和校验；第13条 跨页表格支持",
+    cross:"第10条和第13条在本模块只体现为识别标签和处理路线；真正的OCR、手写识别、Markdown转换和跨页表格恢复归入M03。",
+    note:"该模块重点是入口关卡和质量分流，不承担复杂内容的深度转换。"
+  },
+  {
+    id:"M03",
+    name:"OCR、手写与表格结构化转换",
+    type:"解析增强能力",
+    layer:"解析层",
+    purpose:"把M02分流出的扫描、手写和复杂表格内容转换成后续抽取、证据链和复核可使用的结构化文本。",
+    responsibilities:"负责OCR/多模态识别、手写英文和数字识别、表格结构恢复、跨页表头继承，并输出Markdown文本、坐标、置信度和候选值。",
+    functions:["扫描页OCR和页面文本转换","手写英文和数字识别","普通文本与表格内容转换为Markdown","跨页表格延续关系判断","跨页表头继承、字段对齐和失败标记","低置信识别结果和候选值输出"],
+    input:["M02质量标签和处理路线","页面图像","扫描页","表格片段","多模态识别结果"],
+    output:["Markdown文本","结构化文本块","表格Markdown","坐标信息","置信度","手写字段候选值","跨页表格结构"],
+    deps:["M02"],
+    next:["M04","M05","M08"],
+    reuse:"Markdown文本、结构化文本块、坐标、置信度和表格结构被证据链、字段抽取和人工复核模块复用。",
+    quote:"第10条 手写笔迹识别和校验；第13条 跨页表格支持",
+    cross:"第10条在本模块承担识别和候选值生成；source_ref规范、原文寻址和高亮服务归入M04；人工确认归入M08。第13条在本模块承担表格恢复，字段抽取归入M05。",
+    note:"M02判断资料怎么处理，M03执行复杂内容转换；两者是入口分流和结构化转换的关系。"
+  },
+  {
+    id:"M04",
+    name:"原文索引、source_ref与PDF定位",
+    type:"证据链能力",
+    layer:"证据层",
+    purpose:"把M02/M03产生的页码、文本块、表格单元格、bbox和content变成全系统可调用的原文寻址能力。",
+    responsibilities:"负责统一管理原文块索引，定义source_ref引用规范，并提供根据source_ref回查原文、PDF跳转、高亮和一致性校验的服务。字段与source_ref的绑定由M05抽取时产生。",
+    functions:["原文块、表格单元格、页码和bbox索引管理","source_ref引用规范定义","根据source_ref回查文档、页码、文本块和原文片段","PDF页码跳转和区域高亮","缩放、旋转和页面偏移下的高亮位置校准","原文片段一致性校验服务"],
+    input:["文件清单和页面清单","Markdown文本","结构化文本块","表格Markdown","页码和坐标框（bbox）","原文content","PDF文档"],
+    output:["原文块索引","source_ref引用规范","原文回查结果","PDF定位和高亮信息","原文一致性校验结果"],
+    deps:["M02","M03"],
+    next:["M05","M06","M07","M08","M09","M12"],
+    reuse:"原文索引、source_ref规范和PDF定位服务被抽取、人工复核、AI判断、历史回看和导出审计复用。",
+    quote:"第6条 PDF原文展示；第17条 自动校验提取内容；第19条中合理的来源引用部分",
+    cross:"第17条归入原文回查和一致性校验服务；第19条中与来源和审计引用相关的部分归入本模块，字段绑定由M05产生，模型上下文使用由M09控制。",
+    note:"JSON提供定位原始数据，M04提供稳定的原文寻址、source_ref规范和PDF定位能力。"
+  },
+  {
+    id:"M05",
+    name:"字段抽取管道编排",
+    type:"AI编排能力",
+    layer:"抽取层",
+    purpose:"把固定字段结构、Markdown文本、原文索引和提示词组装成可控的局部抽取任务。",
+    responsibilities:"负责固定字段结构（schema）分块、上下文组装、大模型调用、输出约束、结果解析、source_ref回填和局部抽取任务状态记录。",
+    functions:["固定字段结构（schema）按字段组拆分","按页/片段选择可能出现的字段子集","保留输入片段编号、block_id和source_ref候选","组装受控提示词和上下文","调用大模型抽取字段值","解析局部JSON并由Harness回填source_ref","记录局部抽取任务ID和可重跑粒度"],
+    input:["固定字段结构（schema）","提示词（prompt）","Markdown文本","结构化文本块","source_ref规范","原文索引","质量标签"],
+    output:["局部JSON","字段候选值","字段与source_ref绑定关系","抽取任务ID","局部抽取状态"],
+    deps:["M02","M03","M04"],
+    next:["M06"],
+    reuse:"字段结构分块、上下文组装、大模型调用封装和局部抽取任务粒度被增量文档和局部重跑复用。",
+    quote:"第4条 提取模板管理；第14条 结构化输入输出；第16条 基于模板提取信息；第3条 项目增量更新的一部分",
+    cross:"第3条的补充文档入口在M01，新增文档抽取在M05，局部门禁在M06，结果合并在M07。",
+    note:"LLM只做语义抽取；source_ref回填由Harness根据输入片段编号、block_id和M04原文索引完成。"
+  },
+  {
+    id:"M06",
+    name:"局部结果门禁与返工调度",
+    type:"后端服务能力",
+    layer:"门禁层",
+    purpose:"在局部抽取结果进入大JSON合并前，先完成格式、字段、单位、枚举、必填和证据引用检查。",
+    responsibilities:"负责对局部JSON执行规则门禁（Hooks）、定位失败字段、生成局部重跑请求或人工复核请求，避免问题结果直接进入最终合并。",
+    functions:["局部JSON格式和schema校验","字段类型、单位、范围、枚举、必填检查","source_ref存在性和原文回查校验","失败字段定位到抽取任务ID和字段组","可自动修复问题发起局部重跑请求","多次失败或业务存疑进入人工复核","失败原因结构化记录和规则可扩展机制"],
+    input:["局部JSON","字段候选值","字段与source_ref绑定关系","抽取任务ID","字段规则","原文索引"],
+    output:["通过门禁的局部JSON","局部重跑请求","待复核队列","失败原因","门禁记录"],
+    deps:["M05","M04"],
+    next:["M05","M07","M08"],
+    reuse:"规则门禁（Hooks）、失败原因和局部返工调度被抽取、复核和出件前检查复用。",
+    quote:"第11条 字段合规兜底检查；第12条 字段检查规则编辑交互；第14条结构化输入输出的一部分",
+    cross:"第11条和第12条归入局部门禁；面向业务用户的规则编辑页面可作为后续配置能力评估。",
+    note:"M06不合并大JSON，它负责在合并前拦住问题局部结果，并把可修复问题调回M05局部重跑。"
+  },
+  {
+    id:"M07",
+    name:"结果合并、字段lineage与参数底稿",
+    type:"业务数据能力",
+    layer:"抽取层",
+    purpose:"把通过门禁的局部结果合并成可复核、可进入Risk判断的参数底稿。",
+    responsibilities:"负责合并通过门禁的局部JSON，保留字段lineage，处理重复、缺失、冲突和补充文档覆盖关系，并生成待复核参数底稿。",
+    functions:["通过门禁的局部JSON合并","字段去重和冲突标记","缺失字段标记","保留字段来源、抽取任务ID和source_ref","补充文档结果合并和覆盖记录","生成可进入参数复核和Risk判断的参数底稿"],
+    input:["通过门禁的局部JSON","字段与source_ref绑定关系","抽取任务ID","项目历史结果","补充文档抽取结果"],
+    output:["合并参数JSON","字段lineage","字段冲突记录","缺失字段清单","待复核参数底稿"],
+    deps:["M05","M06","M04"],
+    next:["M08","M09"],
+    reuse:"合并参数JSON、字段lineage、冲突/缺失标记是复核、Risk判断和导出的共同数据源。",
+    quote:"第3条 项目增量更新；第14条 结构化输入输出；第16条 基于模板提取信息",
+    cross:"结构化输入输出横跨M05抽取、M06门禁和M07合并三个环节：M05生成局部结果，M06保证局部结果可进入合并，M07生成参数底稿。",
+    note:"M07不负责触发重跑；它依赖M06提供已通过门禁的局部结果，并保留字段lineage以支持复核、历史和导出审计。"
+  },
+  {
+    id:"M08",
+    name:"参数复核队列与原文核对",
+    type:"复核与审计能力",
+    layer:"复核层",
+    purpose:"让实验员按队列逐条核对参数抽取结果，定位到原文位置后确认或修改参数。",
+    responsibilities:"负责参数复核队列、任务分配、原文定位核对、字段确认、字段修改、修改前后记录和药明账号审计。",
+    functions:["待复核参数队列","按项目成员分配复核任务","按队列顺序打开待核对参数","从参数定位到PDF原文位置","参数确认（approve）","参数修改和保存","旧值/新值差异展示","记录修改人、修改时间、字段名、原值、新值和修改说明","形成完整参数提取table","操作审计日志"],
+    input:["待复核队列","任务分配规则","参数抽取结果","字段lineage","source_ref","药明账号身份","用户修改"],
+    output:["已确认参数","参数修改记录","完整参数提取table","审计日志"],
+    deps:["M01","M04","M06","M07"],
+    next:["M09","M11"],
+    reuse:"参数复核、完整参数提取table和审计日志被Risk判断、历史追踪和导出审计复用。",
+    quote:"第7条 用户人工审核及修改；第18条 存疑内容人工审核；第20条 格式化输出显示；第8条的一部分",
+    cross:"第20条归入参数复核界面呈现能力；第24条中的风险反馈不在本模块处理，M08只处理参数核对与修改留痕。",
+    note:"M08不做Risk判断，也不做错误类型汇总；参数修改记录按数据库留存，至少包含修改人、时间、字段名、原值、新值和修改说明。"
+  },
+  {
+    id:"M09",
+    name:"逐条Risk判断与AI初评写入",
+    type:"AI编排能力",
+    layer:"AI判断层",
+    purpose:"承接M08输出的完整参数提取table，让每一条参数进入LLM判断节点，生成前端表格展示所需的Risk等级和reason。",
+    responsibilities:"负责逐行读取参数table，按当前参数组装原文证据、字段lineage、对应Risk判断标准和专业prompt，调用LLM生成AI初次Risk等级与reason，并写回table，同时初始化该Risk条目的messages会话。",
+    functions:["逐行读取完整参数提取table","为当前参数行组装value、source_ref、字段lineage和原文片段","匹配当前参数对应的Risk判断标准","加载专业prompt和判断方法","调用LLM生成AI初次Risk等级","生成AI初次reason","将risk、reason、AI初次判断时间和模型来源写回table","为每个Risk条目初始化独立messages列表","保存本行上下文注入记录"],
+    input:["完整参数提取table","当前参数行","字段lineage","原文证据引用（source_ref）","原文片段","Risk判断标准","专业prompt / 判断方法 / Skills","药明账号当前上下文"],
+    output:["带AI初次risk的参数table","带AI初次reason的参数table","AI初次判断记录","每条Risk独立messages列表","本行上下文注入记录"],
+    deps:["M01","M04","M07","M08"],
+    next:["M10","M11"],
+    reuse:"逐行上下文组装、Risk标准加载和AI初评写入机制可被后续所有参数行复用。",
+    quote:"第22条 推荐标准对比；第23条 风险等级评估及对应方案填充；第25条中判断方法使用部分",
+    cross:"第25条中的判断方法使用归入本模块；自动生成、审批和嵌入新判断方法属于后续治理能力。",
+    note:"M09的结果会直接进入前端表格展示：每行参数都有AI初次risk、reason和初始messages；后续对话、草稿和正式写回属于M10。"
+  },
+  {
+    id:"M10",
+    name:"Risk结果草稿、确认与写回",
+    type:"产品工作流能力",
+    layer:"写回层",
+    purpose:"承接M09写入risk、reason和messages后的前端Risk table，管理每条Risk的对话session、用户后续编辑、Assistant草稿和正式写回。",
+    responsibilities:"负责Risk table展示后的用户编辑、条目级messages会话、AI工具编辑Draft、私人草稿（Draft）自动保存、确认/驳回（Accept/Reject）、批量确认、从历史恢复为草稿、正式写回和冲突处理入口。",
+    functions:["展示带AI初次risk、reason和messages的Risk table","点击任一Risk时载入该条目的AI初次判断理由和messages列表","维护每条Risk独立对话session","用户讨论过程追加到当前Risk的messages列表","用户直接编辑risk或reason形成私人草稿（Draft）","Assistant在用户确认后调用工具修改当前Risk行","AI工具修改只能写入私人草稿（Draft）","私人草稿自动保存和恢复","单条确认/驳回（Accept/Reject）","批量确认摘要和冲突提示","历史恢复先形成草稿","Accept后写入正式结果"],
+    input:["M09输出的Risk table","每条Risk独立messages列表","当前正式结果","用户编辑","Assistant工具编辑结果","私人草稿（Draft）","历史记录","药明账号身份"],
+    output:["更新后的messages列表","私人草稿（Draft）","Draft层risk/reason更新","正式risk/reason更新","写回事件","批量操作记录"],
+    deps:["M01","M09","M11"],
+    next:["M11","M12"],
+    reuse:"条目级messages会话、AI工具编辑Draft、差异展示、Accept/Reject、写回动作和药明账号身份被Risk结果确认、历史记录和导出前确认复用。",
+    quote:"第7条 用户人工审核及修改；第20条 格式化输出显示；第24条 用户对错误评估的反馈和记录",
+    cross:"这些原报价项在新原型里共同组成Risk table的草稿、确认和正式写回机制。",
+    note:"M10不生成AI初次risk/reason，也不做参数复核；Assistant可调用工具编辑当前Risk行，但只能写入Draft。只有用户Accept后的risk、reason和相关字段才进入正式结果。"
+  },
+  {
+    id:"M11",
+    name:"历史记录、会话追踪与协作冲突",
+    type:"协作与历史能力",
+    layer:"协作层",
+    purpose:"让参数修改、AI初评、Risk写回、messages会话和多人协作版本变化都可追溯。",
+    responsibilities:"负责记录参数修改、AI初评、Risk草稿、Accept写回、messages会话和多人协作版本变化，并支持历史回看、恢复为Draft和正式结果冲突检查。",
+    functions:["参数修改历史记录","AI初次risk/reason历史记录","Risk正式结果历史记录","每条Risk的messages session保存","最近三条历史默认展示","完整历史展开","历史恢复为草稿（Draft）","Accept前检查正式结果版本","冲突对比当前正式结果和我的Draft","Accept all批量写回记录","项目内多人协作修改记录"],
+    input:["参数修改记录","AI初次判断记录","messages列表","正式结果版本","私人草稿（Draft）","Accept写回事件","药明账号身份","项目成员身份","历史记录"],
+    output:["参数历史记录","Risk历史记录","messages历史","项目协作记录","冲突提示","批量操作记录","AI可参考的历史片段"],
+    deps:["M01","M08","M09","M10"],
+    next:["M09","M10","M12"],
+    reuse:"参数历史、Risk历史、messages历史和协作版本记录被AI上下文、冲突检查、审计日志和导出快照引用。",
+    quote:"第7条 用户人工审核及修改；第8条 日志和数据统计；第24条 用户对错误评估的反馈和记录",
+    cross:"历史记录同时服务参数追踪、Risk写回、messages回看、协作冲突和审计归因；AI只读取被明确标记为参考的历史片段。",
+    note:"M11不生成Risk，不改table，也不执行Accept；它负责记录、展示、恢复为Draft和检查多人协作冲突。"
+  },
+  {
+    id:"M12",
+    name:"导出、交付快照与文件生成",
+    type:"导出交付能力",
+    layer:"导出层",
+    purpose:"把已Accept的正式Risk table生成可交付文件，并保留不可变导出快照。",
+    responsibilities:"负责基于已Accept的正式Risk table生成Excel/PPT交付文件，记录导出人、时间、范围和文件版本，并生成不可变导出快照。",
+    functions:["勾选需要导出的正式Risk条目","读取已Accept的正式Risk table","Excel/PPT固定模板生成","排除草稿（Draft）和未确认内容","导出人、时间、范围和文件版本记录","不可变交付快照","导出快照进入项目历史","外部文件修改不回写系统"],
+    input:["已Accept的正式Risk table","勾选范围","药明账号身份","导出模板","历史/审计信息"],
+    output:["Excel/PPT交付文件","不可变导出快照","导出日志","项目历史中的导出记录"],
+    deps:["M01","M04","M10","M11"],
+    next:[],
+    reuse:"导出快照和导出日志被项目历史、审计和后续交付追踪复用。",
+    quote:"第21条 最终交付文件输出；第8条日志中的导出记录部分",
+    cross:"导出记录复用药明账号身份和审计日志能力。",
+    note:"M12不做结果确认，不做Risk判断，不读取Draft；导出后外部Excel/PPT修改不回写系统。"
+  }
+];
+
+const sequence = [
+  {
+    no:"01",
+    title:"项目建立与药明账号进入",
+    input:"药明账号、项目成员、项目文档",
+    action:"建立项目容器、成员权限和全链路身份上下文。",
+    output:"项目ID、成员权限、文档清单",
+    modules:["M01"]
+  },
+  {
+    no:"02",
+    title:"文档Gate与质量标签",
+    input:"上传文件、文件元数据",
+    action:"识别格式、清晰度、扫描/手写/复杂表格特征，并决定处理路线。",
+    output:"页面清单、质量标签、处理路线",
+    modules:["M02"]
+  },
+  {
+    no:"03",
+    title:"复杂内容结构化转换",
+    input:"扫描页、手写、复杂表格",
+    action:"执行OCR、多模态识别、Markdown转换和跨页表格恢复。",
+    output:"Markdown、文本块、bbox、置信度",
+    modules:["M03"]
+  },
+  {
+    no:"04",
+    title:"原文索引与寻址服务",
+    input:"文本块、bbox、content、PDF",
+    action:"建立source_ref规范、原文索引、回查和PDF定位服务。",
+    output:"source_ref、原文回查、高亮定位",
+    modules:["M04"]
+  },
+  {
+    no:"05",
+    title:"字段抽取管道",
+    input:"schema、Markdown、原文索引",
+    action:"Harness组装上下文调用LLM抽字段，并回填source_ref。",
+    output:"局部JSON、字段-source_ref、任务ID",
+    modules:["M05"]
+  },
+  {
+    no:"06",
+    title:"局部门禁与返工",
+    input:"局部JSON、字段规则、source_ref",
+    action:"Hooks校验局部结果；可修复问题回到M05，不可修复进入复核。",
+    output:"通过门禁的局部JSON、重跑请求、待复核队列",
+    modules:["M06"]
+  },
+  {
+    no:"07",
+    title:"合并参数底稿",
+    input:"通过门禁的局部JSON",
+    action:"合并参数JSON，保留字段lineage、冲突和缺失标记。",
+    output:"待复核参数底稿、字段lineage",
+    modules:["M07"]
+  },
+  {
+    no:"08",
+    title:"实验员核对参数",
+    input:"待复核参数、source_ref、字段lineage",
+    action:"按队列定位原文，approve或修改参数，并记录谁改了什么。",
+    output:"完整参数提取table、参数修改记录",
+    modules:["M08"]
+  },
+  {
+    no:"09",
+    title:"Risk初评、Draft与交付",
+    input:"完整参数table、Risk标准、messages",
+    action:"M09逐行写入AI初评；M10管理messages和Draft；M11存历史；M12导出已Accept结果。",
+    output:"正式Risk table、历史记录、导出快照",
+    modules:["M09","M10","M11","M12"]
+  }
+];
+
+const mapping = [
+  ["1 用户登录和权限管理","药明账号、访问权限。","M01 基础平台与药明账号项目工作台","保留归入","否","-","系统需要接入药明 AAD/Entra ID SSO（药明账号单点登录）；项目成员权限、后续审计、修改、导出都复用同一身份源。"],
+  ["2 文档项目管理","按项目管理文档和历史输出。","M01 基础平台与药明账号项目工作台","保留归入","是","M01、M07、M08、M11","项目容器在M01；补充文档后的结果合并在M07；项目成员任务分配和协作历史分别进入M08/M11。"],
+  ["3 项目增量更新","上传新文档并基于已有成果更新。","M01、M05、M06、M07","拆分归入","是","M01、M05、M06、M07","入口在项目管理；抽取复用M05；局部门禁在M06；结果合并归M07。"],
+  ["4 提取模板管理","选择或上传提取模板。","M05 字段抽取管道编排","改名归入","否","-","改为固定字段结构（schema）分块、上下文组装和局部抽取管道；用户自定义模板管理可作为后续配置能力评估。"],
+  ["5 浏览器支持","Chrome/Edge访问。","M01 基础平台与药明账号项目工作台","作为公共能力","否","-","作为基础兼容能力，由平台入口统一承载。"],
+  ["6 PDF原文展示","点选字段展示PDF原文位置。","M04 原文索引、source_ref与PDF定位","改名归入","否","-","重点是source_ref规范、原文回查、PDF跳页和高亮定位服务。"],
+  ["7 用户人工审核及修改","逐条审核、修改并保存记录。","M08、M10、M11","拆分归入","是","M08、M10、M11","参数核对和修改在M08；Risk table草稿、Accept/Reject和正式写回在M10；历史归M11。"],
+  ["8 日志和数据统计","操作日志和数据统计。","M08、M11、M12","作为公共能力","是","M08、M11、M12","参数复核审计、Risk历史、messages历史、协作历史和导出记录是横切能力。"],
+  ["9 文档格式支持","支持pdf/docx/pptx/xlsx。","M02 文档接收与质量分流","改名归入","否","-","该项归入文档入口能力，文件格式支持是接收、基础校验和处理路线判断的一部分。"],
+  ["10 手写笔迹识别和校验","OCR/多模态识别手写并交叉校验。","M02、M03、M04、M08","拆分归入","是","M02、M03、M04、M08","M02识别手写/扫描特征并分流；M03生成Markdown、置信度和候选值；M04提供原文寻址和高亮服务；M08确认低置信内容。"],
+  ["11 字段合规兜底检查","代码检查字段定义，不合规复查。","M06 局部结果门禁与返工调度","保留归入","否","-","作为局部抽取结果进入合并前的确定性门禁。"],
+  ["12 字段检查规则编辑交互","用户新增/修改检查规则。","M06 局部结果门禁与返工调度","改名归入","否","-","归入规则可扩展机制；面向业务用户的规则编辑页面可作为后续配置能力评估。"],
+  ["13 跨页表格支持","判断跨页表格并补表头。","M02、M03、M05","拆分归入","是","M02、M03、M05","M02识别复杂表格并分流；M03恢复跨页表格和表头；M05基于结构化结果做字段抽取。"],
+  ["14 结构化输入输出","结构化模板和JSON输出。","M05、M06、M07","拆分归入","是","M05、M06、M07","结构化约束在M05；局部门禁在M06；合并参数JSON在M07。"],
+  ["15 支持提取模板切换","用户切换不同模板。","后续配置能力","后续评估","否","-","在固定字段结构（schema）路线下，该项更适合作为多业务线配置能力后续评估。"],
+  ["16 基于模板提取信息","按模板字段含义提取文本。","M05 字段抽取管道编排","改名归入","否","-","改为基于固定字段结构（schema）的上下文组装、局部抽取和Harness结果回填。"],
+  ["17 自动校验提取内容","检查结果文字是否与原文一致。","M04 原文索引、source_ref与PDF定位","合并归入","否","-","原文一致性校验归入M04的原文回查和source_ref服务。"],
+  ["18 存疑内容人工审核","列出存疑字段并采纳修改。","M08","合并归入","否","-","归入参数复核队列：实验员定位原文后approve或修改参数。"],
+  ["19 用户修改字段内容的参考引用","修改记录后续自动供大模型参考。","M08、M11；模型上下文由M09控制","拆分归入","是","M08、M09、M11","参数修改记录在M08保存，包含修改人、时间、字段名、原值、新值和说明；历史沉淀在M11，进入AI上下文前由M09筛选。"],
+  ["20 格式化输出显示","HTML表格形式展示提取结果。","M08、M10","作为调用能力","否","-","参数复核table归入M08；带risk/reason的Risk table展示、编辑和草稿归入M10。"],
+  ["21 最终交付文件输出","Excel或PPT输出。","M12 导出、交付快照与文件生成","保留归入","否","-","基于已Accept的正式Risk table生成Excel/PPT，并形成不可变导出快照。"],
+  ["22 推荐标准对比","提取结果与推荐标准对比。","M09 逐条Risk判断与AI初评写入","合并归入","否","-","每条参数进入LLM节点前，会加载对应Risk判断标准作为本行context的一部分。"],
+  ["23 风险等级评估及对应方案填充","按风险模板和逻辑输出内容。","M09 逐条Risk判断与AI初评写入","合并归入","否","-","M09逐行生成AI初次risk等级、reason和messages初始会话，并写回参数table供前端展示。"],
+  ["24 用户对错误评估的反馈和记录","纠正评估并记录反馈。","M10、M11","拆分归入","是","M10、M11","用户对Risk结果的讨论会追加到该条Risk的messages session；AI可调用工具编辑当前行，但修改先进入M10私人草稿，Accept后写回正式结果并由M11记录。"],
+  ["25 patch skill生成、审批和嵌入","根据反馈生成patch skill并审批嵌入。","M09中保留专业prompt和判断方法维护；自动治理另行评估","拆分归入","是","M09、后续治理能力","当前主链路支持管理员维护专业prompt和判断方法；自动生成、审批和嵌入新判断方法作为后续治理能力评估。"]
+];
+
+const reuse = [
+  ["药明账号 / 权限","M01","M08、M10、M11、M12","作为项目成员权限、修改人、确认人、导出人、审计主体和项目访问边界。","是","日志、导出和历史记录统一复用同一药明账号身份源。"],
+  ["项目容器 / 文档清单","M01","M02、M05、M06、M07、M08、M11、M12","为文档处理、补充文档、局部门禁、结果合并、任务分配、协作历史和导出归档提供项目上下文。","是","项目上下文由平台统一维护，后续模块按项目ID调用。"],
+  ["项目成员与任务分配","M01、M08","M08、M11","项目授权在M01，参数复核任务分配在M08，协作历史进入M11。","可能","项目可由多个实验员共同完成，任务分配需要明确承接位置。"],
+  ["文档质量标签","M02","M03、M04、M05、M08","文件、页面和区域的可读性标签决定普通解析、OCR增强、人工复核或异常拦截。","是","M02负责判断资料怎么处理，不负责复杂内容的深度转换。"],
+  ["结构化文本转换","M03","M04、M05、M08","把扫描、手写和复杂表格转换为Markdown文本、结构化文本块、坐标和候选值。","是","M03负责执行转换；M04把其中的页码、bbox和content组织成可调用的寻址能力。"],
+  ["原文索引 / source_ref规范","M04","M05、M06、M07、M08、M09、M11、M12","把M02/M03产出的定位原始数据封装成统一的原文寻址和引用规范。","是","字段与source_ref的绑定由M05产生，M04提供回查、校验和定位服务。"],
+  ["PDF定位高亮","M04","M08、M09、M11、M12","用户从字段、历史、AI解释或导出审计回看真实原文。","是","多个页面复用同一套PDF跳转、高亮和坐标校准能力。"],
+  ["字段结构分块（schema）","M05","M05、M06、M07","长文档抽取时选择字段子集并控制上下文，后续门禁和合并沿用同一字段结构。","可能","它与用户自定义模板管理属于不同能力边界。"],
+  ["大模型调用封装","M05","M09","抽取和Risk初评都调用模型，但上下文和输出约束不同。","可能","共享调用基础设施，业务上下文由各模块分别组织。"],
+  ["规则门禁（Hooks）","M06","M05、M07、M08","校验局部抽取结果，并触发局部重跑、合并放行或人工复核。","是","规则编辑界面可作为后续配置能力评估。"],
+  ["字段lineage","M07","M08、M09、M11、M12","记录字段来自哪个局部JSON、抽取任务ID和source_ref。","是","复核、AI判断、历史回看和导出审计都依赖字段lineage。"],
+  ["参数复核队列","M08","M06、M07、M09、M11","承接待核对参数、任务分配、原文定位、approve、人工修改和修改前后记录。","是","参数复核是抽取结果进入Risk判断前的人工核对机制；修改记录需包含谁在何时把哪个字段从什么值改成什么值。"],
+  ["Risk messages会话","M09、M10","M10、M11","M09为每条Risk初始化messages，M10点击条目时载入并持续追加用户与Assistant讨论，M11负责历史保存和回看。","是","messages是条目级session，不是全局聊天；不同Risk拥有不同messages列表。"],
+  ["AI工具编辑Draft","M10","M10、M11","Assistant在用户讨论确认后可调用工具编辑当前Risk行，但只能写入Draft层。","是","AI有权改table的当前行，但在Accept前不能成为正式结果。"],
+  ["Risk草稿与写回","M10","M09、M11、M12","用户或Assistant修改risk/reason后先进入私人草稿，Accept后更新正式结果，并写入历史和导出来源。","是","M09输出AI初次risk/reason/messages；M10管理后续session、AI工具编辑Draft、确认和正式写回。"],
+  ["历史记录","M11","M09、M10、M12","保存参数历史、AI初评历史、Risk正式结果历史、messages历史和协作版本记录。","是","历史记录进入AI上下文前会被明确标记为参考来源；历史恢复只能形成Draft，不能直接覆盖正式结果。"],
+  ["逐行Risk上下文组装","M09","M09、M10","为参数table中的当前行加载参数值、原文证据、字段lineage、对应Risk标准和判断方法。","是","M09输出会写入table的risk、reason和messages初始内容，供前端展示和后续确认。"],
+  ["导出快照","M12","M01、M11、M12","交付文件、导出人、时间、范围和文件版本形成不可变记录。","可能","只导出已Accept的正式Risk table；Draft、未确认内容和外部文件修改不回写系统。"],
+  ["审计日志","M08","M01、M10、M11、M12","记录谁在何时对哪个对象做了什么。","是","审计日志作为公共能力被复核、写回、历史和导出复用。"]
+];
+
+const byId = Object.fromEntries(modules.map(m => [m.id, m]));
+
+// Short display names for clean pills (full name kept in modal)
+const pillShort = {
+  M01: { short: "基础平台", desc: "药明账号与项目工作台" },
+  M02: { short: "文档分流", desc: "接收、判断与质量标签" },
+  M03: { short: "OCR 转换", desc: "Markdown 与表格结构化" },
+  M04: { short: "原文定位", desc: "source_ref 与 PDF 高亮" },
+  M05: { short: "抽取管道", desc: "schema 分块与 LLM 调用" },
+  M06: { short: "局部门禁", desc: "Hooks 校验与返工调度" },
+  M07: { short: "结果合并", desc: "字段 lineage 与参数底稿" },
+  M08: { short: "参数复核", desc: "原文核对与 approve" },
+  M09: { short: "Risk 初评", desc: "逐行 AI risk / reason" },
+  M10: { short: "Risk 写回", desc: "Draft 与 Accept / Reject" },
+  M11: { short: "历史追踪", desc: "messages 与协作冲突" },
+  M12: { short: "导出快照", desc: "交付文件与日志" }
+};
+
+const state = {
+  activeModule: null,
+  activeTab: "duties",
+  activeSequence: null,
+  activeOverlay: null   // "module" | "mapping" | "reuse" | null
+};
+
+function esc(v) {
+  return String(v == null ? "" : v).replace(/[&<>"']/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]));
+}
+
+function moduleName(id) {
+  const m = byId[id];
+  return m ? (id + " " + m.name) : id;
+}
+
+function renderPills() {
+  const root = document.getElementById("lightModulePills");
+  root.innerHTML = modules.map(m => {
+    const active = state.activeModule === m.id ? "active" : "";
+    const disp = pillShort[m.id] || { short: m.name, desc: m.type };
+    return `<button class="module-pill ${active}" data-module="${esc(m.id)}" type="button">
+      <small>${esc(m.id)} · ${esc(m.layer)}</small>
+      <b>${esc(disp.short)}</b>
+      <span>${esc(disp.desc)}</span>
+    </button>`;
+  }).join("");
+}
+
+function renderSequence() {
+  const root = document.getElementById("sequenceTrack");
+  if (!root) return;
+  const detail = document.getElementById("sequenceDetail");
+  root.innerHTML = sequence.map(step => `
+    <button class="sequence-step ${state.activeSequence === step.no ? "active" : ""}" data-sequence="${esc(step.no)}" type="button">
+      <span class="sequence-no">${esc(step.no)}</span>
+      <span class="sequence-title">${esc(step.title)}</span>
+    </button>
+  `).join("");
+  if (!detail) return;
+  const active = sequence.find(step => step.no === state.activeSequence);
+  if (!active) {
+    detail.classList.remove("open");
+    detail.innerHTML = "";
+    return;
+  }
+  detail.classList.add("open");
+  detail.innerHTML = `
+    <div class="sequence-detail-head">
+      <h3>${esc(active.no)} · ${esc(active.title)}</h3>
+      <div class="sequence-detail-modules">
+        ${active.modules.map(id => `<span>${esc(moduleName(id))}</span>`).join("")}
+      </div>
+    </div>
+    <div class="sequence-detail-grid">
+      <p><em>输入</em>${esc(active.input)}</p>
+      <p><em>动作</em>${esc(active.action)}</p>
+      <p><em>输出</em>${esc(active.output)}</p>
+    </div>
+  `;
+}
+
+function shortPurpose(m) {
+  // Use purpose + first sentence of responsibilities for summary
+  return m.purpose;
+}
+
+function renderModuleModal() {
+  const m = byId[state.activeModule];
+  if (!m) return;
+
+  // header
+  document.getElementById("modalId").textContent = m.id;
+  document.getElementById("modalType").textContent = m.type;
+  document.getElementById("modalTitle").textContent = m.name;
+  document.getElementById("modalPurpose").textContent = shortPurpose(m);
+
+  // tabs active state
+  document.querySelectorAll(".modal-tab").forEach(tab => {
+    tab.classList.toggle("active", tab.dataset.tab === state.activeTab);
+  });
+
+  const body = document.getElementById("modalBody");
+  let html = "";
+
+  if (state.activeTab === "duties") {
+    // Light summary: location + one-line responsibility + top 3 functions
+    const topFuncs = m.functions.slice(0, 3);
+    html = `
+      <div>
+        <h3>模块定位</h3>
+        <p><strong>${esc(m.layer)} · ${esc(m.type)}</strong></p>
+      </div>
+      <div>
+        <h3>核心职责</h3>
+        <p>${esc(m.responsibilities)}</p>
+      </div>
+      <div>
+        <h3>关键功能</h3>
+        <div class="key-functions">
+          ${topFuncs.map(f => `<span>${esc(f)}</span>`).join("")}
+        </div>
+        <p style="margin-top:8px;font-size:12px;opacity:.6">更多功能请切换「功能」标签</p>
+      </div>
+    `;
+  } else if (state.activeTab === "functions") {
+    html = `<div><h3>全部功能</h3><div class="full-list">${m.functions.map(f => `<span>${esc(f)}</span>`).join("")}</div></div>`;
+  } else if (state.activeTab === "io") {
+    html = `
+      <div class="io-row">
+        <div><h3>输入</h3>${renderPillsList(m.input)}</div>
+        <div><h3>输出</h3>${renderPillsList(m.output)}</div>
+      </div>`;
+  } else if (state.activeTab === "links") {
+    html = `
+      <div><h3>前置依赖</h3>${renderPillsList(m.deps)}</div>
+      <div style="margin-top:14px"><h3>后续衔接</h3>${renderPillsList(m.next)}</div>`;
+  } else if (state.activeTab === "quote") {
+    html = `
+      <div><h3>对应原报价项</h3><p>${esc(m.quote)}</p></div>
+      <div><h3>跨模块说明</h3><p>${esc(m.cross)}</p></div>
+      <div><h3>边界备注</h3><p>${esc(m.note)}</p></div>`;
+  } else {
+    html = `
+      <div><h3>可复用能力</h3><p>${esc(m.reuse)}</p></div>
+      <div><h3>边界说明</h3><p>${esc(m.note)}</p></div>`;
+  }
+
+  body.innerHTML = html;
+}
+
+function renderPillsList(items) {
+  if (!items || !items.length) {
+    return '<div class="pill-wrap"><span class="light-pill">无</span></div>';
+  }
+  return `<div class="pill-wrap">${items.map(i => `<span class="light-pill">${esc(moduleName(i))}</span>`).join("")}</div>`;
+}
+
+function closeAllOverlays() {
+  state.activeOverlay = null;
+  document.getElementById("backdrop").classList.remove("open");
+  document.getElementById("moduleModal").classList.remove("open");
+  document.getElementById("dataModal").classList.remove("open");
+}
+
+function openModule(id) {
+  closeAllOverlays();
+  state.activeModule = id || state.activeModule || modules[0].id;
+  state.activeTab = "duties";
+  state.activeOverlay = "module";
+
+  renderPills();
+  renderModuleModal();
+
+  const backdrop = document.getElementById("backdrop");
+  const modal = document.getElementById("moduleModal");
+  backdrop.classList.add("open");
+  modal.classList.add("open");
+}
+
+function openData(type) {
+  // If the data modal is already open, just switch the content without full close
+  const dataModal = document.getElementById("dataModal");
+  const backdrop = document.getElementById("backdrop");
+  const isAlreadyOpen = dataModal.classList.contains("open");
+
+  if (!isAlreadyOpen) {
+    closeAllOverlays();
+  }
+
+  state.activeOverlay = type;
+
+  const isReuse = type === "reuse";
+  const title = isReuse ? "跨模块复用能力" : "原报价项映射";
+  document.getElementById("dataTitle").textContent = title;
+
+  const headers = isReuse
+    ? ["复用能力", "首次建设", "被复用模块", "复用方式", "易重复理解", "说明"]
+    : ["原报价项", "原描述摘要", "新归属模块", "处理方式", "跨模块", "跨到模块", "说明"];
+
+  const rows = isReuse ? reuse : mapping;
+
+  renderTable(headers, rows);
+
+  backdrop.classList.add("open");
+  dataModal.classList.add("open");
+}
+
+function renderTable(headers, rows) {
+  const thead = `<thead><tr>${headers.map(h => `<th>${esc(h)}</th>`).join("")}</tr></thead>`;
+  const tbody = `<tbody>${rows.map(row => 
+    `<tr>${row.map(cell => `<td>${esc(cell)}</td>`).join("")}</tr>`
+  ).join("")}</tbody>`;
+  document.getElementById("lightDataTable").innerHTML = thead + tbody;
+}
+
+function handleTabClick(tabEl) {
+  if (!state.activeModule) return;
+  state.activeTab = tabEl.dataset.tab;
+  renderModuleModal();
+}
+
+// Event handling - clean and strict
+function setupEvents() {
+  const backdrop = document.getElementById("backdrop");
+  const moduleModal = document.getElementById("moduleModal");
+  const dataModal = document.getElementById("dataModal");
+
+  // Module pills (delegated)
+  document.getElementById("lightModulePills").addEventListener("click", e => {
+    const pill = e.target.closest("[data-module]");
+    if (pill) {
+      openModule(pill.dataset.module);
+    }
+  });
+
+  const sequenceTrack = document.getElementById("sequenceTrack");
+  if (sequenceTrack) {
+    sequenceTrack.addEventListener("click", e => {
+      const step = e.target.closest("[data-sequence]");
+      if (step) {
+        state.activeSequence = state.activeSequence === step.dataset.sequence ? null : step.dataset.sequence;
+        renderSequence();
+      }
+    });
+  }
+
+  // Open first / explore
+  document.addEventListener("click", e => {
+    if (e.target.closest("[data-open-first]")) {
+      openModule(modules[0].id);
+      return;
+    }
+  });
+
+  // Data buttons (Mapping / Reuse switches) - handle both nav and inside modal
+  document.addEventListener("click", e => {
+    const dataBtn = e.target.closest("[data-open-data]");
+    if (dataBtn) {
+      const type = dataBtn.dataset.openData;
+      openData(type);
+      return;
+    }
+  });
+
+  // Also listen directly on dataModal for its internal switch/close buttons
+  dataModal.addEventListener("click", e => {
+    const dataBtn = e.target.closest("[data-open-data]");
+    if (dataBtn) {
+      const type = dataBtn.dataset.openData;
+      openData(type);
+      return;
+    }
+  });
+
+  // Tab switching inside module modal (only affect content)
+  moduleModal.addEventListener("click", e => {
+    const tab = e.target.closest("[data-tab]");
+    if (tab) {
+      handleTabClick(tab);
+    }
+  });
+
+  // Close buttons - handle the × and "关闭" buttons
+  // Attach directly to the modals for reliability + also catch from document for nav if needed
+  const handleClose = (e) => {
+    if (e.target.closest("[data-close]")) {
+      closeAllOverlays();
+    }
+  };
+
+  document.addEventListener("click", handleClose);
+  moduleModal.addEventListener("click", handleClose);
+  dataModal.addEventListener("click", handleClose);
+
+  // Strict backdrop close — only when clicking the backdrop itself
+  backdrop.addEventListener("click", e => {
+    if (e.target === backdrop) {
+      closeAllOverlays();
+    }
+  });
+
+  // Scroll only for nav
+  document.addEventListener("click", e => {
+    const scrollBtn = e.target.closest("[data-scroll-target]");
+    if (scrollBtn) {
+      const targetId = scrollBtn.dataset.scrollTarget;
+      const el = document.getElementById(targetId);
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  });
+
+  // ESC key
+  document.addEventListener("keydown", e => {
+    if (e.key === "Escape") {
+      closeAllOverlays();
+    }
+  });
+
+  // Note: No stopPropagation needed.
+  // Backdrop listener checks `e.target === backdrop` directly,
+  // and internal buttons are handled via document delegation.
+}
+
+// Initial render
+function init() {
+  renderSequence();
+  renderPills();
+  setupEvents();
+  // DO NOT auto open anything on load
+}
+
+init();
+</script>
+</body>
+</html>

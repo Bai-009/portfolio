@@ -1,0 +1,335 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GAP · Review</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;600;700&family=Newsreader:wght@500;600;700&family=Noto+Sans+SC:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  body[data-theme="light"]{
+    --bg:#edeff1; --canvas:#e2e4e8; --surface:#fff; --surface2:#fbfcfd; --raise:#fff;
+    --ink:#14161b; --inkbg:#fff; --ink2:#454951; --mut:#787d86; --faint:#a7acb5;
+    --line:rgba(15,18,26,.11); --line2:rgba(15,18,26,.06); --hair:rgba(15,18,26,.035);
+    --accent:#0f9f6e; --accentbg:rgba(15,159,110,.12);
+    --low:#2f8f5f; --mid:#a9762c; --high:#bd4639;
+    --lowbg:rgba(47,143,95,.12); --midbg:rgba(169,118,44,.13); --highbg:rgba(189,70,57,.11);
+    --glow:rgba(15,159,110,.045); --gridc:rgba(15,18,26,.022);
+    --sh:0 1px 2px rgba(15,18,26,.05); --shl:0 2px 6px rgba(15,18,26,.06),0 18px 44px rgba(15,18,26,.12);
+  }
+  body[data-theme="dark"]{
+    --bg:#0b0c0e; --canvas:#070708; --surface:#141517; --surface2:#191b1e; --raise:#1e2024;
+    --ink:#ececee; --inkbg:#0b0c0e; --ink2:#a9acb2; --mut:#73767d; --faint:#4d5057;
+    --line:rgba(255,255,255,.075); --line2:rgba(255,255,255,.045); --hair:rgba(255,255,255,.035);
+    --accent:#3ecf8e; --accentbg:rgba(62,207,142,.14);
+    --low:#4ec98a; --mid:#d9a64e; --high:#e26d63;
+    --lowbg:rgba(78,201,138,.14); --midbg:rgba(217,166,78,.15); --highbg:rgba(226,109,99,.15);
+    --glow:rgba(62,207,142,.05); --gridc:rgba(255,255,255,.014);
+    --sh:0 1px 0 rgba(255,255,255,.03) inset,0 1px 2px rgba(0,0,0,.4); --shl:0 1px 0 rgba(255,255,255,.04) inset,0 12px 34px rgba(0,0,0,.5);
+  }
+  :root{--ui:"Inter","Noto Sans SC",-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;--display:"Newsreader",Georgia,"Songti SC","Noto Serif SC",serif;--mono:"JetBrains Mono","SF Mono",ui-monospace,Menlo,monospace}
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  body{font:13px/1.5 var(--ui);color:var(--ink);background:var(--bg);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+    height:100%;display:flex;flex-direction:column;overflow:hidden;letter-spacing:-.01em;transition:background .25s,color .25s}
+  body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+    background:radial-gradient(820px 460px at 72% -12%,var(--glow),transparent 62%),
+      linear-gradient(var(--gridc) 1px,transparent 1px) 0 0/46px 46px,linear-gradient(90deg,var(--gridc) 1px,transparent 1px) 0 0/46px 46px}
+  ::selection{background:var(--accentbg)}
+  header,#app{position:relative;z-index:1}
+
+  header{flex:0 0 auto;display:flex;align-items:center;gap:16px;height:50px;padding:0 18px;background:color-mix(in srgb,var(--surface) 72%,transparent);backdrop-filter:saturate(1.4) blur(20px);border-bottom:1px solid var(--line)}
+  .brand{display:flex;align-items:center;gap:9px}
+  .brand .gd{width:8px;height:8px;border-radius:2px;background:var(--accent);box-shadow:0 0 10px var(--accent)}
+  .brand b{font-family:var(--display);font-weight:600;font-size:15.5px;letter-spacing:.01em}
+  .brand span{font-size:9.5px;color:var(--mut);font-family:var(--mono);letter-spacing:.18em;text-transform:uppercase}
+  .sp{flex:1}
+  .seg{display:flex;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:2.5px}
+  .seg button{border:none;background:none;font:500 11px/1 var(--ui);color:var(--mut);padding:6px 14px;border-radius:6px;cursor:pointer;transition:.15s;letter-spacing:.02em}
+  .seg button.on{background:var(--raise);color:var(--ink);box-shadow:var(--sh)}
+  .tbtn{width:30px;height:30px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--mut);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:.15s}
+  .tbtn:hover{color:var(--ink)} .tbtn svg{width:15px;height:15px}
+  body[data-theme="light"] .tbtn .sun{display:none} body[data-theme="dark"] .tbtn .moon{display:none}
+
+  #app{flex:1;display:flex;min-height:0;padding:13px;gap:13px}
+  section{min-width:0;display:flex;flex-direction:column;min-height:0;border:1px solid var(--line);border-radius:13px;overflow:hidden;background:var(--surface);box-shadow:var(--sh)}
+  #ai{flex:0 0 396px;transition:flex-basis .28s cubic-bezier(.4,0,.2,1)}
+  #ai.collapsed{flex-basis:46px}
+  #pdf{flex:1;background:var(--canvas)}
+  #excel{flex:1}
+  .ph{flex:0 0 auto;display:flex;align-items:center;gap:9px;height:46px;padding:0 16px;border-bottom:1px solid var(--line2)}
+  .ph .t{font-family:var(--display);font-weight:600;font-size:13.5px;letter-spacing:0}
+  .ph .t small{font-weight:400;color:var(--mut);margin-left:8px;font-size:10.5px}
+  .ph .r{margin-left:auto;display:flex;align-items:center;gap:9px}
+
+  #ai .expand{display:none}
+  #ai.collapsed .ph,#ai.collapsed .chat,#ai.collapsed .composer{display:none}
+  #ai.collapsed .expand{display:flex;flex:1;flex-direction:column;align-items:center;justify-content:flex-start;padding-top:9px;cursor:pointer;color:var(--mut);transition:.15s}
+  #ai.collapsed .expand:hover{color:var(--ink)}
+  .expand .cv{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;transition:.15s}
+  #ai.collapsed .expand:hover .cv{background:var(--raise);box-shadow:var(--sh)}
+  .cbtn{width:26px;height:26px;border-radius:7px;border:1px solid var(--line);background:var(--raise);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--mut);transition:.15s}
+  .cbtn:hover{color:var(--ink);border-color:color-mix(in srgb,var(--ink) 30%,transparent)} .cbtn svg,.expand svg{width:14px;height:14px}
+
+  #ai .ph .dot{width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 9px var(--accent)}
+  .chat{flex:1;overflow:auto;padding:18px 18px 8px;display:flex;flex-direction:column;gap:14px}
+  .msg{max-width:90%;font-size:12.5px;line-height:1.66}
+  .msg.ai .who{font-weight:600;color:var(--accent);margin-right:7px}
+  .msg.ai{max-width:100%} .msg.ai .bub{color:var(--ink2);line-height:1.72}
+  .msg.me{align-self:flex-end} .msg.me .bub{color:var(--ink);padding:9px 14px;border-radius:15px 15px 5px 15px;border:none}
+  body[data-theme="light"] .msg.me .bub{background:#e9ebef}
+  body[data-theme="dark"] .msg.me .bub{background:#222529}
+  .msg.note{align-self:center;max-width:100%;font-family:var(--mono);font-size:9.5px;letter-spacing:.04em;color:var(--faint);text-align:center}
+  .bg{margin-top:8px;padding-left:11px;border-left:2px solid var(--line);font-size:11.5px;color:var(--mut);line-height:1.66}
+  .msg b{font-weight:640;color:var(--ink)}
+  .rec{display:inline-flex;align-items:center;gap:5px;font-weight:640}
+  .rec .dt{width:6px;height:6px;border-radius:50%}
+  .rec.Low{color:var(--low)} .rec.Low .dt{background:var(--low)}
+  .rec.Medium{color:var(--mid)} .rec.Medium .dt{background:var(--mid)}
+  .rec.High{color:var(--high)} .rec.High .dt{background:var(--high)}
+
+  .composer{margin:13px;border:1px solid var(--line);border-radius:13px;background:var(--surface2);box-shadow:var(--sh);transition:.18s}
+  .composer:focus-within{border-color:color-mix(in srgb,var(--accent) 45%,transparent);box-shadow:0 0 0 3px var(--accentbg)}
+  .composer textarea{display:block;width:100%;border:none;outline:none;resize:none;background:none;padding:13px 15px 6px;font:13px/1.55 var(--ui);color:var(--ink);height:42px}
+  .composer textarea::placeholder{color:var(--faint)}
+  .composer .bar{display:flex;align-items:center;gap:10px;padding:7px 9px 9px 11px}
+  .levels{display:inline-flex;background:var(--bg);border:1px solid var(--line2);border-radius:8px;padding:2.5px}
+  .levels button{border:none;background:none;font:500 11px/1 var(--ui);color:var(--mut);padding:6px 12px;border-radius:6px;cursor:pointer;transition:.14s;letter-spacing:.02em}
+  .levels button:hover{color:var(--ink)}
+  .levels button[data-l="Low"]:hover{color:var(--low)} .levels button[data-l="Medium"]:hover{color:var(--mid)} .levels button[data-l="High"]:hover{color:var(--high)}
+  .send{margin-left:auto;display:inline-flex;align-items:center;justify-content:center;width:31px;height:31px;border-radius:9px;border:none;background:var(--ink);color:var(--inkbg);cursor:pointer;transition:.15s}
+  .send:hover{opacity:.88} .send svg{width:14px;height:14px}
+
+  #pdf .ph{background:color-mix(in srgb,var(--surface) 60%,transparent);backdrop-filter:blur(8px)}
+  .plist{display:flex;gap:5px;overflow:auto}
+  .plist .it{display:inline-flex;align-items:center;gap:6px;font-size:11px;color:var(--mut);padding:5px 10px;border-radius:7px;border:1px solid transparent;cursor:pointer;white-space:nowrap;transition:.15s}
+  .plist .it:hover{background:var(--hair);color:var(--ink2)} .plist .it.on{background:var(--raise);color:var(--ink);border-color:var(--line)}
+  .plist .pg{font-family:var(--mono);font-size:8.5px;color:var(--faint)}
+  .pscroll{flex:1;overflow:auto;padding:26px}
+  .sheet{width:534px;margin:0 auto 24px;background:#fff;border-radius:2px;box-shadow:var(--shl);padding:46px 52px;position:relative;min-height:432px;color:#23252b}
+  .sheet .pno{position:absolute;top:16px;right:20px;font-family:var(--mono);font-size:9px;color:#b9bcc4}
+  .sheet h4{font-family:var(--display);font-size:15px;margin:0 0 2px;color:#1d1f25;letter-spacing:-.005em;font-weight:600}
+  .sheet .ds{font-size:9.5px;color:#8a8e97;margin-bottom:22px;font-family:var(--mono);letter-spacing:.06em;text-transform:uppercase}
+  .sheet .hh{font-size:10px;font-weight:700;color:#33363d;margin:20px 0 9px;letter-spacing:.06em;text-transform:uppercase}
+  .sheet p{font-size:11px;line-height:1.92;color:#52555c;margin:0 0 11px}
+  .sheet .fig{height:84px;background:repeating-linear-gradient(45deg,#f4f5f7,#f4f5f7 9px,#eceef1 9px,#eceef1 18px);border-radius:4px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:9px;color:#b1b5be;margin:4px 0 12px}
+  table.doc{width:100%;border-collapse:collapse;font-size:10.5px;margin:2px 0}
+  table.doc th{text-align:left;font-weight:600;color:#5a5d65;border-bottom:1.5px solid #d8dade;padding:7px 8px;font-size:8.5px;letter-spacing:.06em;text-transform:uppercase}
+  table.doc td{border-bottom:1px solid #eef0f2;padding:7px 8px;color:#4a4d54}
+  .hw{font-family:"Bradley Hand","Comic Sans MS",cursive;font-size:15px;color:#2b3a4d}
+  .region{position:absolute;border-radius:5px;border:2px solid transparent;transition:.3s}
+  .region.hot{border-color:rgba(190,140,60,.85);background:rgba(190,140,60,.16);box-shadow:0 0 0 5px rgba(190,140,60,.1)}
+
+  #excel .allbtn{display:inline-flex;align-items:center;gap:7px;font:550 11px/1 var(--ui);color:var(--inkbg);background:var(--ink);border:none;border-radius:8px;padding:7px 13px;cursor:pointer;transition:.15s}
+  #excel .allbtn:hover{opacity:.88} #excel .allbtn[disabled]{background:var(--bg);color:var(--faint);cursor:default;border:1px solid var(--line)}
+  #excel .allbtn svg{width:13px;height:13px}
+  .exwrap{flex:1;overflow:auto}
+  table.ex{border-collapse:separate;border-spacing:0;width:100%;font-size:12.5px;font-variant-numeric:tabular-nums}
+  table.ex th{position:sticky;top:0;background:color-mix(in srgb,var(--surface) 96%,transparent);backdrop-filter:blur(6px);border-bottom:1px solid var(--line);text-align:left;padding:11px 16px;font-family:var(--mono);font-size:8px;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);font-weight:500;z-index:1}
+  table.ex td{border-bottom:1px solid var(--line2);padding:13px 16px;vertical-align:top;color:var(--ink2)}
+  table.ex tr:last-child td{border-bottom:none}
+  table.ex tr:hover td{background:var(--hair)}
+  tr.pending td{background:var(--midbg)}
+  tr.pending td:first-child{box-shadow:inset 2px 0 0 var(--mid)}
+  @keyframes land{0%{background:var(--accentbg)}100%{background:transparent}}
+  tr.land td{animation:land 1.3s ease-out}
+  .param{font-weight:600;color:var(--ink)}
+  .edit{display:inline-block;min-width:36px;cursor:text;border-radius:5px;padding:2px 6px;margin:-2px -6px;transition:.13s}
+  .edit:hover{background:var(--hair);box-shadow:0 0 0 1px var(--line) inset}
+  .cedit{font:500 12.5px var(--ui);color:var(--ink);background:var(--bg);border:1px solid color-mix(in srgb,var(--accent) 45%,transparent);border-radius:6px;padding:5px 8px;outline:none;width:96%;box-shadow:0 0 0 3px var(--accentbg)}
+  .vwrap{display:inline-flex;align-items:center;gap:7px}
+  .ask{opacity:0;display:inline-flex;align-items:center;justify-content:center;width:19px;height:19px;border-radius:6px;border:1px solid var(--line);background:var(--raise);color:var(--mut);cursor:pointer;transition:.15s}
+  tr:hover .ask{opacity:1} .ask:hover{color:var(--accent);border-color:color-mix(in srgb,var(--accent) 40%,transparent)} .ask svg{width:11px;height:11px}
+  .src{display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);font-size:10px;color:var(--mut);cursor:pointer;transition:.15s}
+  .src:hover{color:var(--accent)} .src svg{width:11px;height:11px;opacity:.7}
+  .empty{color:var(--faint)}
+  .topen{color:var(--mid);font-family:var(--mono);font-size:11px;letter-spacing:.02em;border-bottom:1px dashed color-mix(in srgb,var(--mid) 55%,transparent);padding-bottom:1px;cursor:text}
+  .rtag{display:inline-flex;align-items:center;gap:6px;font-weight:600;cursor:pointer;border-radius:7px;padding:3px 8px;margin:-3px -8px;transition:.15s}
+  .rtag:hover{background:var(--hair)} .rtag .dt{width:7px;height:7px;border-radius:50%}
+  .rtag.Low{color:var(--low)} .rtag.Low .dt{background:var(--low)}
+  .rtag.Medium{color:var(--mid)} .rtag.Medium .dt{background:var(--mid)}
+  .rtag.High{color:var(--high)} .rtag.High .dt{background:var(--high)}
+  .del{color:var(--high);background:var(--highbg);text-decoration:line-through;text-decoration-color:color-mix(in srgb,var(--high) 60%,transparent);padding:1px 6px;border-radius:5px;margin-right:7px}
+  .add{color:var(--accent);background:var(--accentbg);padding:1px 6px;border-radius:5px;font-weight:600}
+  .add.Low{color:var(--low);background:var(--lowbg)} .add.Medium{color:var(--mid);background:var(--midbg)} .add.High{color:var(--high);background:var(--highbg)}
+  /* Reason 上下堆叠 + Cursor 式 accept */
+  .rcell{display:flex;flex-direction:column;gap:10px;align-items:flex-start}
+  .rtext{font-size:11.5px;line-height:1.55;max-width:330px}
+  .review{display:inline-flex;align-items:center;gap:8px}
+  .review .y{display:inline-flex;align-items:center;gap:6px;font:550 11px/1 var(--ui);color:var(--inkbg);background:var(--ink);border:none;border-radius:7px;padding:7px 13px;cursor:pointer;transition:.14s;box-shadow:var(--sh)}
+  .review .y:hover{opacity:.88} .review .y svg{width:13px;height:13px}
+  .review .n{font:540 11px/1 var(--ui);color:var(--mut);background:none;border:1px solid transparent;border-radius:7px;padding:7px 11px;cursor:pointer;transition:.14s}
+  .review .n:hover{color:var(--ink);background:var(--hair)}
+  .review .p{font:540 11px/1 var(--ui);color:var(--faint);background:none;border:1px solid var(--line);border-radius:7px;padding:7px 11px;cursor:pointer;transition:.14s}
+  .review .p:hover{color:var(--ink2);background:var(--hair)}
+  .rin{width:260px;max-width:100%;font:11.5px var(--ui);color:var(--ink);border:1px solid var(--line);background:var(--surface2);border-radius:7px;padding:6px 9px;outline:none;margin-top:2px}
+  .rin:focus{border-color:color-mix(in srgb,var(--accent) 45%,transparent);box-shadow:0 0 0 3px var(--accentbg)}
+  .rin::placeholder{color:var(--faint)}
+
+  .foot{flex:0 0 auto;height:27px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:9px;letter-spacing:.07em;color:var(--faint);background:color-mix(in srgb,var(--surface) 50%,transparent);border-top:1px solid var(--line2);position:relative;z-index:1}
+</style>
+</head>
+<body data-theme="light">
+  <header>
+    <div class="brand"><span class="gd"></span><b>GAP</b><span>Review</span></div>
+    <div class="sp"></div>
+    <div class="seg" id="seg" style="display:none"><button data-tab="pdf">Source</button><button data-tab="excel">Table</button></div>
+    <button class="tbtn" id="theme" title="主题">
+      <span class="moon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z"/></svg></span>
+      <span class="sun"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4 12H2M22 12h-2M5 5l1.5 1.5M17.5 17.5L19 19M19 5l-1.5 1.5M6.5 17.5L5 19"/></svg></span>
+    </button>
+  </header>
+
+  <div id="app">
+    <section id="ai">
+      <div class="expand" id="expand" title="展开助手"><span class="cv"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span></div>
+      <div class="ph"><span class="t">Assistant</span>
+        <span class="r"><span class="cbtn" id="collapse"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></span></span></div>
+      <div class="chat" id="chat"></div>
+      <div class="composer">
+        <textarea id="in" rows="1" placeholder=""></textarea>
+        <div class="bar">
+          <div class="levels" id="levels"><button data-l="Low">Low</button><button data-l="Medium">Medium</button><button data-l="High">High</button></div>
+          <button class="send" id="send"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+        </div>
+      </div>
+    </section>
+
+    <section id="pdf">
+      <div class="ph"><div class="plist" id="plist"></div></div>
+      <div class="pscroll" id="pscroll"></div>
+    </section>
+
+    <section id="excel">
+      <div class="ph"><span class="t">GAP Table <small>extraction + risk · one sheet</small></span>
+        <span class="r"><button class="allbtn" id="all">Accept all</button></span></div>
+      <div class="exwrap"><table class="ex" id="ex"></table></div>
+    </section>
+  </div>
+
+<script>
+const CHK='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 6"/></svg>';
+const SRC='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 17H7A5 5 0 017 7h2M15 7h2a5 5 0 010 10h-2M8 12h8"/></svg>';
+const ASK='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.1 9a3 3 0 015.8 1c0 2-3 3-3 3M12 17h.01"/></svg>';
+const PDFS=[{id:'rep',name:'Process Report',pages:3},{id:'br',name:'Batch Record BR-009',pages:2,hand:true},{id:'coa',name:'COA',pages:1}];
+const ROWS=[
+ {param:'Cell line', value:'CHO-K1', src:{pdf:'br',pg:1,reg:'cell'}, risk:'Low',
+  reason:'客户细胞系 CHO-K1 与平台主细胞库一致,克隆来源与代次记录可衔接,既有表征数据可直接沿用,无放大障碍。',
+  logic:'取自批记录 p1「Cell line」字段,印刷体,OCR 直读为 CHO-K1;与平台主细胞库登记名比对一致。'},
+ {param:'Scale-up', value:'10–50 L', src:{pdf:'rep',pg:1,reg:'scale'}, risk:'Low',
+  reason:'客户终点规模 10–50 L 落在平台 XDR 量产线衔接窗口内;放大主要关注 kLa 与混合时间的几何相似性,需在该量程确认 DO 与剪切窗口,整体可控。',
+  logic:'报告 p1 叙述段「technical scale-up in 10 L system」+ p3 规模示意图标注 10–50 L;单一字段无法覆盖,故合并两处得区间。'},
+ {param:'Optimization system', value:'DasGip 1 L', src:{pdf:'rep',pg:2,reg:'opt'}, risk:'Low',
+  reason:'客户优化平台 DasGip 1 L 与公司 Ambr/DasGip 体系同源,DoE 数据可迁移性高;差异仅在传感器型号与 pH/DO 控制回路,核对探头校准与参数映射即可。',
+  logic:'报告 p2「Process Parameters」表中「Optimization system」行直读为 DasGip parallel,归一化为 DasGip 1 L。'},
+ {param:'Target density', value:'2.0×10⁵', src:{pdf:'br',pg:2,reg:'conc'}, risk:'Low',
+  reason:'目标接种密度;原登记 2.0×10⁵,与平台常规范围相差一个数量级,疑似录入/识别偏差,待修正后再评估。',
+  logic:'p2 手写栏;两模型独立读图(不读 OCR 文本)均得 2.0×10⁶,与原值 2.0×10⁵ 不一致,提议按双读结果修正。', pending:{value:{old:'2.0×10⁵',new:'2.0×10⁶'}}},
+ {param:'Seed passage', value:'P5', src:{pdf:'br',pg:2,reg:'pass'}, risk:'Medium',
+  reason:'客户种子代次 P5 超出平台 SOP 上限 P3 两代;高代次通常伴随比生长速率、比产率下降及糖型漂移,需结合活率与产物质量数据评估对批次一致性的影响。',
+  logic:'p2 手写「Seed passage」字段,识别为 P5。'},
+ {param:'Culture temp', value:'37 °C', src:{pdf:'br',pg:1,reg:'temp'}, risk:'Low',
+  reason:'培养温度 37 °C 与平台标准培养条件一致,无温移策略差异,风险低。',
+  logic:'p1「Culture temperature」字段印刷体直读为 37 °C。'},
+];
+const JUDGE={
+ 'Seed passage':{cmp:'客户 <b>P5</b> ｜ 平台标准 <b>P3</b>（SOP 上限）',bg:'平台 SOP 将工作种子库传代限制在 P3 以内,以控制基因漂变与表型稳定性。客户在 P5 进行,超出 2 代。历史批次与文献显示:高代次易致比生长速率、比产率下降与糖型分布漂移。建议调取 P5 的细胞活率、倍增时间及产物质量数据,据此定级。'},
+ 'Scale-up':{cmp:'客户 <b>10–50 L</b> ｜ 平台 XDR 量程',bg:'终点 10–50 L 对应平台 XDR 起始量程,工艺衔接顺畅。放大风险集中在搅拌/通气策略能否在该量程维持目标 DO 与剪切窗口,需确认 kLa 与混合时间的相似性。'},
+ 'Optimization system':{cmp:'客户 <b>DasGip 1 L</b> ｜ 公司体系',bg:'DasGip 1 L 平行系统与公司既有优化平台同源,DoE 数据迁移性高。差异点为传感器型号与 pH/DO 控制回路,需核对探头校准与控制参数映射。'},
+};
+let aiOpen=true, rightTab='excel', curPdf='br', hot=null, item=null, editing=null, mode=null;
+const aiEl=document.getElementById('ai'),pdfEl=document.getElementById('pdf'),exEl=document.getElementById('excel'),seg=document.getElementById('seg');
+document.getElementById('theme').onclick=()=>{const b=document.body;b.dataset.theme=b.dataset.theme==='light'?'dark':'light';};
+function layout(){aiEl.classList.toggle('collapsed',!aiOpen);
+  if(aiOpen){seg.style.display='flex';pdfEl.style.display=rightTab==='pdf'?'flex':'none';exEl.style.display=rightTab==='excel'?'flex':'none';[...seg.children].forEach(b=>b.classList.toggle('on',b.dataset.tab===rightTab));}
+  else{seg.style.display='none';pdfEl.style.display='flex';exEl.style.display='flex';}}
+const toggle=()=>{aiOpen=!aiOpen;layout();};
+document.getElementById('collapse').onclick=toggle; document.getElementById('expand').onclick=toggle;
+[...seg.children].forEach(b=>b.onclick=()=>{rightTab=b.dataset.tab;layout();});
+
+function body(p,n){
+ if(p.id==='rep'&&n===1)return `<h4>Process Development Report</h4><div class="ds">Upstream · small-scale（占位）</div><div class="hh">Overview</div><p>This section outlines the upstream development workflow and the rationale behind parameter selection across screening, optimization and scale-up.</p><div class="fig">workflow figure</div><p>The lead process is confirmed at small scale before technical scale-up.</p><span class="region" data-reg="scale" style="left:52px;right:52px;top:306px;height:38px"></span>`;
+ if(p.id==='rep'&&n===2)return `<div class="hh">Process Parameters</div><table class="doc"><tr><th>Parameter</th><th>Value</th><th>Unit</th></tr><tr><td>Working volume</td><td>1.0</td><td>L</td></tr><tr data-reg="opt"><td>Optimization system</td><td>DasGip parallel</td><td>—</td></tr><tr><td>Temperature</td><td>37</td><td>°C</td></tr></table><p>Parameters screened to identify critical process parameters and ideal working range.</p><span class="region" data-reg="opt" style="left:46px;right:46px;top:102px;height:28px"></span>`;
+ if(p.id==='rep'&&n===3)return `<div class="hh">Confirmation & Scale-up</div><p>A confirmation run with chosen parameters precedes technical scale-up, including depth filtration and harvest stability assessment.</p><div class="fig">scale-up schematic</div>`;
+ if(p.id==='br'&&n===1)return `<h4>Batch Record · BR-009</h4><div class="ds">Client A · Process Transfer（占位）</div><table class="doc"><tr><th>Field</th><th>Entry</th></tr><tr data-reg="cell"><td>Cell line</td><td>CHO-K1</td></tr><tr data-reg="temp"><td>Culture temperature</td><td>37 °C</td></tr></table>`;
+ if(p.id==='br'&&n===2)return `<div class="hh">Run parameters（部分手写）</div><table class="doc"><tr><th>Field</th><th>Entry</th></tr><tr data-reg="conc"><td>Target density</td><td><span class="hw">2.0×10⁶</span></td></tr><tr data-reg="pass"><td>Seed passage</td><td><span class="hw">P5</span></td></tr></table><p>Entries recorded by operator; verified against in-process controls.</p>`;
+ return `<h4>${p.name}</h4><div class="ds">占位</div><div class="fig">document content</div>`;
+}
+function plist(){document.getElementById('plist').innerHTML=PDFS.map(p=>`<span class="it ${p.id===curPdf?'on':''}" onclick="openPdf('${p.id}')">${p.name}<span class="pg">${p.pages}p</span>${p.hand?' ✎':''}</span>`).join('');}
+function renderPdf(){const p=PDFS.find(x=>x.id===curPdf);let h='';for(let n=1;n<=p.pages;n++)h+=`<div class="sheet" id="pg-${p.id}-${n}"><div class="pno">${n} / ${p.pages}</div>${body(p,n)}</div>`;
+  document.getElementById('pscroll').innerHTML=h;
+  if(hot){const el=document.querySelector(`#pscroll [data-reg="${hot}"]`);if(el){if(!el.classList.contains('region'))el.style.position='relative';el.classList.add('hot');el.scrollIntoView({behavior:'smooth',block:'center'});}}}
+window.openPdf=(id,reg,pg)=>{curPdf=id;hot=reg||null;if(aiOpen){rightTab='pdf';layout();}plist();renderPdf();
+  if(pg){const s=document.getElementById(`pg-${id}-${pg}`);if(s)setTimeout(()=>s.scrollIntoView({behavior:'smooth',block:'start'}),40);}};
+
+function rtag(v,i){return `<span class="rtag ${v}" onclick="discuss(${i})"><span class="dt"></span>${v}</span>`;}
+function esc(s){return (s||'').replace(/"/g,'&quot;');}
+function renderEx(){
+ const t=document.getElementById('ex');
+ t.innerHTML=`<tr><th>Parameter</th><th>Value</th><th>Source</th><th>Risk</th><th>Reason</th></tr>`+ROWS.map((r,i)=>{
+   const pd=r.pending,P=PDFS.find(x=>x.id===r.src.pdf);
+   let valCell;
+   if(editing&&editing.i===i&&editing.col==='value') valCell=`<input class="cedit" id="ce" value="${esc(r.value)}" onblur="commitEdit(${i},'value',this.value)" onkeydown="if(event.key==='Enter')this.blur()">`;
+   else if(pd&&pd.value) valCell=`<span class="del">${pd.value.old}</span><span class="add">${pd.value.new}</span>`;
+   else valCell=`<span class="vwrap"><span class="edit" onclick="editCell(${i},'value')">${r.value||'—'}</span><button class="ask" title="抽取依据" onclick="askLogic(${i})">${ASK}</button></span>`;
+   const risk = pd&&pd.risk?`<span class="del">${pd.risk.old}</span><span class="add ${pd.risk.new}">${pd.risk.new}</span>`:rtag(r.risk,i);
+   // reason 文本
+   let rtxt;
+   if(editing&&editing.i===i&&editing.col==='reason'){const cur=pd&&pd.reason?(pd.reason.new||''):r.reason;rtxt=`<input class="cedit" id="ce" value="${esc(cur)}" onblur="commitEdit(${i},'reason',this.value)" onkeydown="if(event.key==='Enter')this.blur()">`;}
+   else if(pd&&pd.risk){ rtxt=`${pd.reason&&pd.reason.old?`<span class="del">${pd.reason.old}</span>`:''}<input class="rin" placeholder="待填写" value="${esc(pd.reason&&pd.reason.new||'')}" oninput="setReason(${i},this.value)">`; }
+   else if(r.reason) rtxt=`<span class="edit" onclick="editCell(${i},'reason')">${r.reason}</span>`;
+   else rtxt=`<span class="topen" onclick="editCell(${i},'reason')">待填写</span>`;
+   const review = pd?`<span class="review"><button class="y" onclick="acc(${i})">${CHK}Accept</button><button class="n" onclick="rej(${i})">Reject</button><button class="p" onclick="pend(${i})">Pending</button></span>`:'';
+   const rcell=`<div class="rcell"><div class="rtext">${rtxt}</div>${review}</div>`;
+   return `<tr class="${pd?'pending':''}"><td class="param">${r.param}</td><td>${valCell}</td>
+     <td><span class="src" onclick="openPdf('${r.src.pdf}','${r.src.reg}',${r.src.pg})">${SRC}${P.name} · p${r.src.pg}</span></td>
+     <td>${risk}</td><td>${rcell}</td></tr>`;
+ }).join('');
+ const n=ROWS.filter(r=>r.pending).length,b=document.getElementById('all');
+ b.disabled=!n;b.innerHTML=n?`${CHK}Accept all · ${n}`:'All accepted';
+ if(editing){const e=document.getElementById('ce');if(e){e.focus();e.select();}}
+}
+window.editCell=(i,col)=>{if(col==='value'&&ROWS[i].pending&&ROWS[i].pending.value)return;editing={i,col};renderEx();};
+window.commitEdit=(i,col,val)=>{val=val.trim();const r=ROWS[i];
+  if(r.pending&&col==='reason'){if(!r.pending.reason)r.pending.reason={old:r.reason};r.pending.reason.new=val;}
+  else r[col]=val; editing=null;renderEx();};
+function commit(r){if(!r.pending)return;for(const k in r.pending)r[k]=r.pending[k].new||'';delete r.pending;}
+window.acc=i=>{commit(ROWS[i]);renderEx();};
+window.rej=i=>{delete ROWS[i].pending;renderEx();};
+window.setReason=(i,v)=>{const r=ROWS[i];if(!r.pending)return;if(!r.pending.reason)r.pending.reason={old:r.reason};r.pending.reason.new=v;};
+window.pend=i=>{};
+document.getElementById('all').onclick=()=>{ROWS.forEach(commit);renderEx();};
+
+function land(i){rightTab='excel';layout();renderEx();
+  setTimeout(()=>{const tr=document.querySelectorAll('#ex tr')[i+1];if(tr){tr.scrollIntoView({behavior:'smooth',block:'center'});tr.classList.add('land');setTimeout(()=>tr.classList.remove('land'),1300);}},40);}
+
+let chat=[]; const chatEl=document.getElementById('chat');
+function renderChat(){chatEl.innerHTML=chat.map(m=>{
+  if(m[0]==='note')return `<div class="msg note">${m[1]}</div>`;
+  if(m[0]==='ai')return `<div class="msg ai"><div class="bub"><span class="who">Assistant:</span>${m[1]}</div></div>`;
+  return `<div class="msg me"><div class="bub">${m[1]}</div></div>`;
+}).join('');chatEl.scrollTop=chatEl.scrollHeight;}
+function intro(){item=null;mode=null;setComposerMode();chat=[['ai','已按平台标准完成预填与初判。']];renderChat();}
+function setComposerMode(){const l=document.getElementById('levels');if(l)l.style.display=mode==='value'?'none':'inline-flex';}
+function applyValue(i,val){const r=ROWS[i];if(!r.pending)r.pending={};r.pending.value={old:r.value,new:val};chat.push(['note',`${r.param} 值 → ${val}（待接受）`]);renderChat();land(i);}
+window.discuss=i=>{item=i;mode='risk';const r=ROWS[i],j=JUDGE[r.param]||{cmp:`现判 <b>${r.risk}</b>`,bg:r.reason};aiOpen=true;rightTab='excel';layout();setComposerMode();
+ chat=[['ai',`<b>${r.param}</b> · 现判 <span class="rec ${r.risk}"><span class="dt"></span>${r.risk}</span> · ${j.cmp}<div class="bg">${j.bg}</div>`]];renderChat();};
+window.askLogic=i=>{item=i;mode='value';const r=ROWS[i];aiOpen=true;rightTab='excel';layout();setComposerMode();
+ chat=[['ai',`<b>${r.param}</b> = ${r.value}<div class="bg">${r.logic}</div>`],['ai','如与原文不符,直接输入正确值即可更正（作为待接受改动）。']];renderChat();};
+function setLevel(L){if(item==null){chat.push(['note','先点终表中的一项 Risk']);renderChat();return;}
+ const r=ROWS[item];if(!r.pending)r.pending={};r.pending.risk={old:r.risk,new:L};if(!r.pending.reason)r.pending.reason={old:r.reason,new:''};
+ chat.push(['me',L]);chat.push(['note',`${r.param} → ${L}`]);renderChat();land(item);}
+document.querySelectorAll('.levels button').forEach(b=>b.onclick=()=>setLevel(b.dataset.l));
+const input=document.getElementById('in');
+function send(){const v=input.value.trim();if(!v)return;chat.push(['me',v]);input.value='';input.style.height='42px';
+ if(mode==='value'&&item!=null){applyValue(item,v);}
+ else if(mode==='risk'&&item!=null&&ROWS[item].pending&&ROWS[item].pending.risk){ROWS[item].pending.reason={old:ROWS[item].reason,new:v};chat.push(['note','Reason 已更新']);land(item);}
+ else{chat.push(['ai','收到。']);renderChat();}}
+document.getElementById('send').onclick=send;
+input.addEventListener('input',()=>{input.style.height='42px';input.style.height=Math.min(input.scrollHeight,120)+'px';});
+input.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();}});
+
+plist();renderPdf();renderEx();intro();layout();
+</script>
+<script>askLogic(3);</script></body>
+</html>
